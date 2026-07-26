@@ -5,20 +5,12 @@ import { PosTerminal } from "@/components/pos-terminal";
 import { ReportExporter } from "@/components/report-exporter";
 import { formatCurrency, recipeCost, saleGrossTotal } from "@/lib/domain";
 import { findNavigationItem } from "@/lib/navigation";
-import {
-  inventoryItems,
-  menuProducts,
-  movements,
-  productionBatches,
-  purchases,
-  recipes,
-  sales,
-  suppliers
-} from "@/lib/sample-data";
 import { periodDays, reconstructDay, resolvePeriod } from "@/lib/reports";
+import type { AppData } from "@/lib/app-data";
 
-export function ModuleWorkspace({ module }: { module: string }) {
+export function ModuleWorkspace({ module, data }: { module: string; data: AppData }) {
   const item = findNavigationItem(module);
+  const { inventoryItems, menuProducts, movements, productionBatches, purchases, recipes, suppliers } = data;
 
   if (!item || item.key === "dashboard") {
     notFound();
@@ -257,7 +249,7 @@ export function ModuleWorkspace({ module }: { module: string }) {
   }
 
   if (item.key === "reconstruction") {
-    const reconstruction = reconstructDay(new Date().toISOString().slice(0, 10));
+    const reconstruction = reconstructDay(data, new Date().toISOString().slice(0, 10));
     return (
       <>
         <ModuleHeader title={item.label} description={item.description} />

@@ -26,7 +26,7 @@ npm run dev
 
 5. Abre `http://localhost:3000`.
 
-La aplicacion funciona sin Supabase configurado usando datos semilla locales. Cuando agregues Supabase, el middleware protege los modulos operativos y habilita autenticacion real.
+La aplicacion funciona sin Supabase configurado usando datos semilla locales. Cuando agregues Supabase, las pantallas leen la base real; si las tablas estan vacias, la app queda en cero para empezar a crear inventario, recetas, carta y ventas desde Supabase.
 
 ## Estructura
 

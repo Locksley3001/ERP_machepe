@@ -11,6 +11,7 @@ import {
   Tooltip
 } from "chart.js";
 import { Bar, Line } from "react-chartjs-2";
+import type { Sale } from "@/lib/domain";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend);
 
@@ -26,7 +27,24 @@ const chartOptions = {
   }
 };
 
-export function DashboardCharts() {
+export function DashboardCharts({ sales }: { sales: Sale[] }) {
+  const labels = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"];
+  const dailyRevenue = [0, 0, 0, 0, 0, 0, 0];
+  const productTotals = new Map<string, number>();
+
+  sales.forEach((sale) => {
+    const date = new Date(sale.soldAt);
+    const index = date.getDay() === 0 ? 6 : date.getDay() - 1;
+    dailyRevenue[index] += sale.lines.reduce((total, line) => total + line.quantity * line.unitPrice, 0) - sale.discount;
+    sale.lines.forEach((line) => {
+      productTotals.set(line.productName, (productTotals.get(line.productName) ?? 0) + line.quantity);
+    });
+  });
+
+  const rankedProducts = [...productTotals.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const productLabels = rankedProducts.length ? rankedProducts.map(([name]) => name) : ["Sin ventas"];
+  const productValues = rankedProducts.length ? rankedProducts.map(([, quantity]) => quantity) : [0];
+
   return (
     <div className="chart-grid">
       <section className="panel">
@@ -35,11 +53,11 @@ export function DashboardCharts() {
           <Line
             options={chartOptions}
             data={{
-              labels: ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"],
+              labels,
               datasets: [
                 {
                   label: "Ventas",
-                  data: [320000, 410000, 260000, 0, 0, 0, 0],
+                  data: dailyRevenue,
                   borderColor: "#0f766e",
                   backgroundColor: "rgba(15, 118, 110, 0.16)",
                   tension: 0.35
@@ -55,12 +73,12 @@ export function DashboardCharts() {
           <Bar
             options={chartOptions}
             data={{
-              labels: ["Bubble Tea Taro", "Mochi fresa", "Corn Dog queso"],
+              labels: productLabels,
               datasets: [
                 {
                   label: "Unidades",
-                  data: [7, 2, 0],
-                  backgroundColor: ["#14b8a6", "#f59e0b", "#64748b"]
+                  data: productValues,
+                  backgroundColor: ["#14b8a6", "#f59e0b", "#64748b", "#0ea5e9", "#a855f7"]
                 }
               ]
             }}

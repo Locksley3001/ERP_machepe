@@ -1,4 +1,5 @@
 import { ModuleWorkspace } from "@/components/module-workspace";
+import { getAppData } from "@/lib/app-data";
 import { navigationItems } from "@/lib/navigation";
 
 export function generateStaticParams() {
@@ -7,5 +8,6 @@ export function generateStaticParams() {
 
 export default async function ModulePage({ params }: { params: Promise<{ module: string }> }) {
   const { module } = await params;
-  return <ModuleWorkspace module={module} />;
+  const data = await getAppData();
+  return <ModuleWorkspace module={module} data={data} />;
 }

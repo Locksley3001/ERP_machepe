@@ -1,5 +1,5 @@
-import { inventoryItems, movements, productionBatches, purchases, sales } from "@/lib/sample-data";
 import { saleCostTotal, saleGrossTotal, sumBy, type PeriodPreset } from "@/lib/domain";
+import type { AppData } from "@/lib/app-data";
 
 export type PeriodDay = {
   date: string;
@@ -88,15 +88,15 @@ export function periodDays(start: Date, end: Date, now = new Date()): PeriodDay[
   return days;
 }
 
-export function salesInPeriod(start: Date, end: Date) {
+export function salesInPeriod(sales: AppData["sales"], start: Date, end: Date) {
   return sales.filter((sale) => {
     const soldAt = new Date(sale.soldAt);
     return soldAt >= start && soldAt <= end;
   });
 }
 
-export function buildReportSummary(start: Date, end: Date): ReportSummary {
-  const scopedSales = salesInPeriod(start, end);
+export function buildReportSummary(sales: AppData["sales"], start: Date, end: Date): ReportSummary {
+  const scopedSales = salesInPeriod(sales, start, end);
   const revenue = sumBy(scopedSales, saleGrossTotal);
   const cost = sumBy(scopedSales, saleCostTotal);
   const productTotals = new Map<string, number>();
@@ -119,11 +119,11 @@ export function buildReportSummary(start: Date, end: Date): ReportSummary {
   };
 }
 
-export function reconstructDay(date: string) {
+export function reconstructDay(data: AppData, date: string) {
   const targetStart = startOfDay(new Date(date));
   const targetEnd = endOfDay(new Date(date));
-  const daySales = salesInPeriod(targetStart, targetEnd);
-  const dayMovements = movements.filter((movement) => {
+  const daySales = salesInPeriod(data.sales, targetStart, targetEnd);
+  const dayMovements = data.movements.filter((movement) => {
     const occurredAt = new Date(movement.occurredAt);
     return occurredAt >= targetStart && occurredAt <= targetEnd;
   });
@@ -132,24 +132,22 @@ export function reconstructDay(date: string) {
     date,
     sales: daySales,
     movements: dayMovements,
-    purchases: purchases.filter((purchase) => {
+    purchases: data.purchases.filter((purchase) => {
       const purchasedAt = new Date(purchase.purchasedAt);
       return purchasedAt >= targetStart && purchasedAt <= targetEnd;
     }),
-    production: productionBatches.filter((batch) => {
+    production: data.productionBatches.filter((batch) => {
       const producedAt = new Date(batch.producedAt);
       return producedAt >= targetStart && producedAt <= targetEnd;
     }),
-    openingInventory: inventoryItems.map((item) => {
+    openingInventory: data.inventoryItems.map((item) => {
       const deltaToday = sumBy(
         dayMovements.filter((movement) => movement.itemId === item.id),
         (movement) => movement.quantity
       );
       return { itemName: item.name, quantity: item.quantity - deltaToday, unit: item.unit };
     }),
-    closingInventory: inventoryItems.map((item) => ({ itemName: item.name, quantity: item.quantity, unit: item.unit })),
-    summary: buildReportSummary(targetStart, targetEnd)
+    closingInventory: data.inventoryItems.map((item) => ({ itemName: item.name, quantity: item.quantity, unit: item.unit })),
+    summary: buildReportSummary(data.sales, targetStart, targetEnd)
   };
 }
-
-export { inventoryItems, movements, productionBatches, purchases, sales };

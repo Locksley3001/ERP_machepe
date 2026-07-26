@@ -1,9 +1,10 @@
 import { Activity, Banknote, Boxes, TrendingUp } from "lucide-react";
 import { DashboardCharts } from "@/components/charts/dashboard-charts";
 import { formatCurrency, saleCostTotal, saleGrossTotal, sumBy } from "@/lib/domain";
-import { inventoryItems, purchases, sales } from "@/lib/sample-data";
+import { getAppData } from "@/lib/app-data";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const { inventoryItems, purchases, sales } = await getAppData();
   const revenue = sumBy(sales, saleGrossTotal);
   const cost = sumBy(sales, saleCostTotal);
   const lowStock = inventoryItems.filter((item) => item.quantity <= item.minimumQuantity).length;
@@ -24,7 +25,7 @@ export default function DashboardPage() {
         <Kpi icon={<Activity size={20} />} label="Compras recientes" value={String(purchases.length)} />
       </div>
 
-      <DashboardCharts />
+      <DashboardCharts sales={sales} />
     </>
   );
 }

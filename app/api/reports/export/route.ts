@@ -2,14 +2,16 @@ import ExcelJS from "exceljs";
 import { NextRequest } from "next/server";
 import { formatCurrency, saleCostTotal, saleGrossTotal, type PeriodPreset } from "@/lib/domain";
 import { buildReportSummary, periodDays, resolvePeriod, salesInPeriod } from "@/lib/reports";
-import { inventoryItems, movements, productionBatches, purchases } from "@/lib/sample-data";
+import { getAppData } from "@/lib/app-data";
 
 export async function GET(request: NextRequest) {
+  const data = await getAppData();
+  const { inventoryItems, movements, productionBatches, purchases, sales } = data;
   const preset = (request.nextUrl.searchParams.get("preset") ?? "week") as PeriodPreset;
   const from = request.nextUrl.searchParams.get("from") ?? undefined;
   const to = request.nextUrl.searchParams.get("to") ?? undefined;
   const { start, end } = resolvePeriod(preset, from, to);
-  const summary = buildReportSummary(start, end);
+  const summary = buildReportSummary(sales, start, end);
   const workbook = new ExcelJS.Workbook();
 
   workbook.creator = "ERP POS Cafeteria";
@@ -44,7 +46,7 @@ export async function GET(request: NextRequest) {
   periodDays(start, end).forEach((day) => {
     const dateStart = new Date(`${day.date}T00:00:00`);
     const dateEnd = new Date(`${day.date}T23:59:59`);
-    const daySales = salesInPeriod(dateStart, dateEnd);
+    const daySales = salesInPeriod(sales, dateStart, dateEnd);
     const revenue = daySales.reduce((total, sale) => total + saleGrossTotal(sale), 0);
     const cost = daySales.reduce((total, sale) => total + saleCostTotal(sale), 0);
     ventas.addRow({

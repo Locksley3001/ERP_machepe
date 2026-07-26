@@ -13,7 +13,7 @@ La carpeta components contiene piezas visuales reutilizables.
 La carpeta lib contiene reglas de negocio, tipos TypeScript, datos semilla, calculos y conexion a Supabase.
 La carpeta supabase/migrations contiene el esquema SQL que crea tablas, relaciones, indices, triggers, politicas RLS y tipos de datos.
 
-Cuando Supabase no esta configurado, la aplicacion muestra datos semilla para que puedas abrir y revisar la interfaz. Cuando configuras las variables de entorno, la autenticacion real queda disponible y el middleware protege los modulos internos.
+Cuando Supabase no esta configurado, la aplicacion muestra datos semilla para que puedas abrir y revisar la interfaz. Cuando configuras las variables de entorno, las pantallas leen Supabase. Si la base de datos esta vacia, la aplicacion aparece en cero para empezar a crear inventario, proveedores, recetas, carta y ventas.
 
 3. CREAR CUENTA EN SUPABASE
 
