@@ -1,8 +1,9 @@
 "use client";
 
 import { Minus, Plus, ReceiptText, Search, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { formatCurrency, type MenuProduct } from "@/lib/domain";
+import { formatCurrency, type MenuProduct, type PaymentMethod } from "@/lib/domain";
 
 type CartLine = {
   product: MenuProduct;
@@ -10,10 +11,15 @@ type CartLine = {
 };
 
 export function PosTerminal({ products }: { products: MenuProduct[] }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Todas");
   const [cart, setCart] = useState<CartLine[]>([]);
   const [discount, setDiscount] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
   const categories = ["Todas", ...Array.from(new Set(products.map((product) => product.category)))];
 
   const filteredProducts = products.filter((product) => {
@@ -47,6 +53,39 @@ export function PosTerminal({ products }: { products: MenuProduct[] }) {
         )
         .filter((line) => line.quantity > 0)
     );
+  }
+
+  async function finalizeSale() {
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/modules/sales", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentMethod,
+          discount,
+          notes,
+          lines: cart.map((line) => ({ productId: line.product.id, quantity: line.quantity }))
+        })
+      });
+      const result = (await response.json()) as { error?: string; invoiceNumber?: string };
+
+      if (!response.ok) {
+        throw new Error(result.error ?? "No se pudo finalizar la venta.");
+      }
+
+      setCart([]);
+      setDiscount(0);
+      setNotes("");
+      setMessage(`Venta guardada: ${result.invoiceNumber ?? "factura creada"}.`);
+      router.refresh();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "No se pudo finalizar la venta.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -134,15 +173,31 @@ export function PosTerminal({ products }: { products: MenuProduct[] }) {
         </div>
 
         <div className="payment-grid">
-          <button type="button">Efectivo</button>
-          <button type="button">Tarjeta</button>
-          <button type="button">Transferencia</button>
-          <button type="button">Mixto</button>
+          {[
+            ["cash", "Efectivo"],
+            ["card", "Tarjeta"],
+            ["transfer", "Transferencia"],
+            ["mixed", "Mixto"]
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              className={paymentMethod === value ? "active" : ""}
+              onClick={() => setPaymentMethod(value as PaymentMethod)}
+            >
+              {label}
+            </button>
+          ))}
         </div>
+        <label className="field">
+          <span>Observaciones</span>
+          <textarea value={notes} rows={3} onChange={(event) => setNotes(event.target.value)} />
+        </label>
+        {message ? <p className="form-message">{message}</p> : null}
 
-        <button className="primary-action" type="button" disabled={!cart.length}>
+        <button className="primary-action" type="button" disabled={!cart.length || loading} onClick={finalizeSale}>
           <ReceiptText size={18} />
-          Finalizar venta
+          {loading ? "Guardando venta" : "Finalizar venta"}
         </button>
       </aside>
     </div>

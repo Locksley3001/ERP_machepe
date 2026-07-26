@@ -154,6 +154,8 @@ Al finalizar una venta en el flujo productivo se debe:
 6. Guardar snapshots de precios y costos.
 7. Actualizar indicadores y reportes.
 
+En la aplicacion, el boton Finalizar venta crea la factura en sales, crea sale_lines, exige receta activa para cada producto, valida inventario suficiente y descuenta ingredientes/empaques mediante inventory_movements. Si falta receta o inventario, la venta se bloquea y muestra el motivo.
+
 15. MOVIMIENTOS DE INVENTARIO
 
 Toda modificacion real del inventario pasa por inventory_movements.
@@ -254,6 +256,21 @@ Render puede ejecutar Next.js, aunque Vercel es el destino mas natural.
 3. Agrega la pantalla en components/module-workspace.tsx o crea una ruta dedicada si el modulo es grande.
 4. Crea tablas nuevas en una migracion nueva, nunca editando una migracion ya aplicada en produccion.
 5. Documenta el flujo en este manual.
+
+28. FORMULARIOS ACTIVOS
+
+Los botones principales de creacion ya abren formularios y guardan en Supabase cuando el usuario inicio sesion.
+
+Inventario: crea articulo, categoria si no existe, proveedor principal opcional y movimiento de cantidad inicial.
+Proveedores: crea proveedor con contacto, empresa, telefono, WhatsApp, correo, direccion, ciudad, redes, web y observaciones.
+Compras: crea compra, lineas de compra y movimientos de entrada al inventario.
+Produccion: crea lote, insumos consumidos, movimiento de salida de insumos y movimiento de entrada del producto producido.
+Recetas: crea version de receta, ingredientes y deja activa la nueva version si asi se marca.
+Carta: crea producto vendible con categoria, precio, favorito y estado activo.
+Movimientos: crea ajuste manual de inventario con cantidad positiva o negativa.
+Seguridad: crea usuario de Supabase Auth y perfil con rol administrador o empleado. Requiere que quien lo haga sea administrador y que exista SUPABASE_SERVICE_ROLE_KEY.
+
+Los modulos Alertas, Costos, Reportes e Historial son principalmente de consulta y calculo, por eso no tienen formulario de creacion directa.
 
 26. ARCHIVOS IMPORTANTES
 

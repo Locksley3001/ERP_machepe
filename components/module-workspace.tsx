@@ -1,9 +1,10 @@
-import { AlertTriangle, Plus, Save } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { notFound } from "next/navigation";
+import { CreateRecordDialog } from "@/components/create-record-dialog";
 import { DataTable } from "@/components/data-table";
 import { PosTerminal } from "@/components/pos-terminal";
 import { ReportExporter } from "@/components/report-exporter";
-import { formatCurrency, recipeCost, saleGrossTotal } from "@/lib/domain";
+import { formatCurrency, recipeCost, saleGrossTotal, type ModuleKey } from "@/lib/domain";
 import { findNavigationItem } from "@/lib/navigation";
 import { periodDays, reconstructDay, resolvePeriod } from "@/lib/reports";
 import type { AppData } from "@/lib/app-data";
@@ -28,7 +29,7 @@ export function ModuleWorkspace({ module, data }: { module: string; data: AppDat
   if (item.key === "inventory") {
     return (
       <>
-        <ModuleHeader title={item.label} description={item.description} action="Nuevo articulo" />
+        <ModuleHeader title={item.label} description={item.description} module={item.key} action="Nuevo articulo" data={data} />
         <DataTable
           rows={inventoryItems}
           columns={[
@@ -48,7 +49,7 @@ export function ModuleWorkspace({ module, data }: { module: string; data: AppDat
   if (item.key === "suppliers") {
     return (
       <>
-        <ModuleHeader title={item.label} description={item.description} action="Nuevo proveedor" />
+        <ModuleHeader title={item.label} description={item.description} module={item.key} action="Nuevo proveedor" data={data} />
         <DataTable
           rows={suppliers}
           columns={[
@@ -67,7 +68,7 @@ export function ModuleWorkspace({ module, data }: { module: string; data: AppDat
   if (item.key === "purchases") {
     return (
       <>
-        <ModuleHeader title={item.label} description={item.description} action="Registrar compra" />
+        <ModuleHeader title={item.label} description={item.description} module={item.key} action="Registrar compra" data={data} />
         <DataTable
           rows={purchases.map((purchase) => ({
             ...purchase,
@@ -88,7 +89,7 @@ export function ModuleWorkspace({ module, data }: { module: string; data: AppDat
   if (item.key === "production") {
     return (
       <>
-        <ModuleHeader title={item.label} description={item.description} action="Nuevo lote" />
+        <ModuleHeader title={item.label} description={item.description} module={item.key} action="Nuevo lote" data={data} />
         <DataTable
           rows={productionBatches}
           columns={[
@@ -106,7 +107,7 @@ export function ModuleWorkspace({ module, data }: { module: string; data: AppDat
   if (item.key === "recipes") {
     return (
       <>
-        <ModuleHeader title={item.label} description={item.description} action="Nueva receta" />
+        <ModuleHeader title={item.label} description={item.description} module={item.key} action="Nueva receta" data={data} />
         <div className="recipe-grid">
           {recipes.map((recipe) => (
             <section className="panel" key={recipe.id}>
@@ -137,7 +138,7 @@ export function ModuleWorkspace({ module, data }: { module: string; data: AppDat
   if (item.key === "menu") {
     return (
       <>
-        <ModuleHeader title={item.label} description={item.description} action="Nuevo producto" />
+        <ModuleHeader title={item.label} description={item.description} module={item.key} action="Nuevo producto" data={data} />
         <DataTable
           rows={menuProducts}
           columns={[
@@ -156,7 +157,7 @@ export function ModuleWorkspace({ module, data }: { module: string; data: AppDat
   if (item.key === "movements") {
     return (
       <>
-        <ModuleHeader title={item.label} description={item.description} action="Ajuste manual" />
+        <ModuleHeader title={item.label} description={item.description} module={item.key} action="Ajuste manual" data={data} />
         <DataTable
           rows={movements}
           columns={[
@@ -274,7 +275,7 @@ export function ModuleWorkspace({ module, data }: { module: string; data: AppDat
 
   return (
     <>
-      <ModuleHeader title={item.label} description={item.description} />
+      <ModuleHeader title={item.label} description={item.description} module={item.key} action="Nuevo usuario" data={data} />
       <section className="panel">
         <h2>Control de acceso y auditoria</h2>
         <p>Roles disponibles: Administrador y Empleado. Cada operacion critica debe quedar en audit_log.</p>
@@ -291,24 +292,26 @@ export function ModuleWorkspace({ module, data }: { module: string; data: AppDat
   );
 }
 
-function ModuleHeader({ title, description, action }: { title: string; description: string; action?: string }) {
+function ModuleHeader({
+  title,
+  description,
+  action,
+  module,
+  data
+}: {
+  title: string;
+  description: string;
+  action?: string;
+  module?: ModuleKey;
+  data?: AppData;
+}) {
   return (
     <div className="module-header">
       <div>
         <h1>{title}</h1>
         <p>{description}</p>
       </div>
-      {action ? (
-        <button className="primary-action inline" type="button">
-          <Plus size={18} />
-          {action}
-        </button>
-      ) : (
-        <button className="ghost-action" type="button">
-          <Save size={18} />
-          Guardar vista
-        </button>
-      )}
+      {action && module && data ? <CreateRecordDialog module={module} action={action} data={data} /> : null}
     </div>
   );
 }

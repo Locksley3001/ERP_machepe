@@ -402,6 +402,13 @@ tr:last-child td {
   background: color-mix(in srgb, var(--primary) 14%, var(--surface));
 }
 
+.payment-grid button.active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface));
+  color: var(--primary-strong);
+  font-weight: 750;
+}
+
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -501,7 +508,8 @@ tr:last-child td {
 }
 
 .field input,
-.field select {
+.field select,
+.field textarea {
   min-height: 42px;
   padding: 0 11px;
   border: 1px solid var(--line);
@@ -509,6 +517,12 @@ tr:last-child td {
   outline: 0;
   background: var(--surface);
   color: var(--text);
+}
+
+.field textarea {
+  min-height: 88px;
+  padding: 10px 11px;
+  resize: vertical;
 }
 
 .totals {
@@ -626,6 +640,105 @@ tr:last-child td {
   color: var(--danger);
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(15, 23, 42, 0.52);
+}
+
+.modal-panel {
+  width: min(980px, 100%);
+  max-height: min(820px, calc(100vh - 44px));
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+}
+
+.modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.22rem;
+}
+
+.modal-header p {
+  margin: 5px 0 0;
+  color: var(--muted);
+}
+
+.record-form {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.full-span {
+  grid-column: 1 / -1;
+}
+
+.line-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.line-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.line-editor-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.line-list {
+  display: grid;
+  gap: 10px;
+}
+
+.line-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) 42px;
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
 @media (max-width: 1120px) {
   .app-shell,
   .pos-layout {
@@ -672,5 +785,19 @@ tr:last-child td {
 
   .product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-grid,
+  .line-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-actions .primary-action,
+  .form-actions .ghost-action {
+    width: 100%;
   }
 }
