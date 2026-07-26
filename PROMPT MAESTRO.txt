@@ -1,0 +1,719 @@
+PROMPT MAESTRO
+
+Quiero que actúes como un equipo completo de desarrollo de software compuesto por un arquitecto de software senior, un ingeniero backend senior, un ingeniero frontend senior, un especialista en bases de datos PostgreSQL, un diseñador UX/UI, un ingeniero DevOps y un desarrollador experto en sistemas POS y ERP para restaurantes y cafeterías.
+
+Tu objetivo es desarrollar un sistema POS profesional completamente personalizado para mi negocio. No quiero un ejemplo, un prototipo ni una demostración. Quiero un sistema real, escalable, limpio, profesional y preparado para utilizarse en producción.
+
+OBJETIVO GENERAL
+
+Desarrollar una aplicación web (NO un programa de escritorio) tipo PWA (Progressive Web App), optimizada para computadores, pero que también pueda abrirse desde celulares y tablets.
+
+La aplicación deberá almacenar toda la información en una base de datos en la nube utilizando Supabase (PostgreSQL).
+
+La sincronización deberá ser automática entre dispositivos.
+
+Toda la arquitectura deberá ser escalable para que pueda crecer durante muchos años.
+
+El código debe estar completamente comentado.
+
+Cada función importante deberá tener comentarios explicando qué hace.
+
+Quiero que todo el proyecto tenga una estructura profesional.
+
+NO quiero un desarrollo por fases.
+
+Quiero que el proyecto se construya completamente.
+
+---
+
+TECNOLOGÍAS OBLIGATORIAS
+
+Frontend
+
+- Next.js
+- React
+- TypeScript
+
+Backend
+
+- Next.js API Routes o equivalente moderno
+- TypeScript
+
+Base de datos
+
+- Supabase
+- PostgreSQL
+
+Autenticación
+
+- Supabase Auth
+
+Exportación
+
+- ExcelJS
+
+Gráficos
+
+- Chart.js
+
+Despliegue
+
+- Vercel
+
+---
+
+MUY IMPORTANTE
+
+Como NO soy programador profesional, quiero que todas las conexiones externas se expliquen paso a paso.
+
+Ejemplos:
+
+- Cómo crear una cuenta en Supabase.
+- Cómo crear el proyecto.
+- Cómo obtener las API Keys.
+- Cómo conectar Supabase con el proyecto.
+- Cómo configurar las variables de entorno.
+- Cómo crear las tablas.
+- Cómo ejecutar las migraciones.
+- Cómo desplegar el proyecto en Vercel.
+- Cómo volver a conectarlo si cambio de computador.
+- Cómo realizar copias de seguridad.
+- Cómo restaurar una copia.
+
+Todo explicado como si fuera para alguien que nunca ha utilizado esas herramientas.
+
+No quiero simplemente el código.
+
+Quiero explicaciones claras, sencillas y detalladas.
+
+---
+
+DOCUMENTACIÓN
+
+Además del código quiero un archivo llamado
+
+MANUAL_DEL_SISTEMA.txt
+
+En ese archivo quiero una explicación completa del funcionamiento del sistema.
+
+Debe incluir absolutamente todos los flujos.
+
+Cómo funciona.
+
+Qué hace.
+
+Qué ocurre internamente.
+
+Qué sucede cuando se presiona cada botón.
+
+Qué tablas de la base de datos intervienen.
+
+Cómo se relacionan.
+
+Cómo agregar nuevos módulos.
+
+Cómo modificar productos.
+
+Cómo modificar recetas.
+
+Cómo agregar categorías.
+
+Cómo agregar proveedores.
+
+Cómo agregar nuevos usuarios.
+
+Cómo funciona el inventario.
+
+Cómo funcionan las ventas.
+
+Cómo funciona la producción.
+
+Cómo funcionan los reportes.
+
+Cómo funciona la autenticación.
+
+Cómo funciona la exportación.
+
+Cómo funciona Supabase.
+
+Cómo funciona cada sección.
+
+Debe ser una documentación completa.
+
+---
+
+DISEÑO
+
+Quiero un diseño moderno.
+
+Minimalista.
+
+Profesional.
+
+Muy limpio.
+
+Muy rápido.
+
+Inspirado en sistemas POS modernos.
+
+Con modo claro y modo oscuro.
+
+Animaciones suaves.
+
+Colores elegantes.
+
+Interfaz intuitiva.
+
+---
+
+MÓDULOS DEL SISTEMA
+
+1. Inventario
+
+Debe permitir registrar absolutamente cualquier artículo.
+
+Ejemplos
+
+Materia prima.
+
+Empaques.
+
+Productos de limpieza.
+
+Activos fijos.
+
+Herramientas.
+
+Equipos.
+
+Sillas.
+
+Mesas.
+
+Neveras.
+
+Licuadoras.
+
+Todo.
+
+Cada producto debe tener:
+
+- Código único
+- Nombre
+- Categoría
+- Subcategoría
+- Descripción
+- Unidad de medida
+- Cantidad actual
+- Cantidad mínima
+- Cantidad máxima
+- Costo de compra
+- Costo promedio
+- Precio de referencia
+- Estado
+- Ubicación
+- Código de barras (opcional)
+- Imagen
+- Proveedor principal
+- Fecha de creación
+- Última modificación
+- Observaciones
+
+Debe existir historial de movimientos.
+
+Cada entrada y salida debe quedar registrada.
+
+---
+
+2. Proveedores
+
+Registrar proveedores una sola vez.
+
+Campos
+
+- Nombre
+- Empresa
+- Contacto
+- Teléfono
+- WhatsApp
+- Correo
+- Dirección
+- Ciudad
+- Redes sociales
+- Página web
+- Observaciones
+
+Después simplemente seleccionarlos desde una lista.
+
+---
+
+3. Compras
+
+Cuando llegue mercancía no modificar el inventario manualmente.
+
+Debe existir un módulo de compras.
+
+Cada compra debe registrar
+
+- Proveedor
+- Fecha
+- Número de factura
+- Productos
+- Cantidades
+- Costos
+- IVA
+- Descuentos
+- Total
+
+Al guardar
+
+Debe aumentar automáticamente el inventario.
+
+Debe guardar historial.
+
+---
+
+4. Producción
+
+Este módulo es obligatorio.
+
+Debe permitir transformar materias primas en productos preparados.
+
+Ejemplos
+
+Jarabe de azúcar.
+
+Crema chantilly.
+
+Tapioca cocida.
+
+Té negro.
+
+Té verde.
+
+Salsas.
+
+Cuando se produzca
+
+Debe descontar automáticamente las materias primas.
+
+Debe aumentar el inventario del producto producido.
+
+Debe registrar fecha.
+
+Cantidad producida.
+
+Responsable.
+
+Costo.
+
+---
+
+5. Recetas
+
+Cada producto vendido debe tener una receta.
+
+Ejemplo
+
+Bubble Tea Taro
+
+150 ml leche
+
+20 g polvo de taro
+
+90 g tapioca
+
+30 ml jarabe
+
+1 vaso
+
+1 tapa
+
+1 pitillo
+
+Las recetas deben consumir tanto alimentos como empaques.
+
+Debe ser posible modificar recetas sin afectar el historial de ventas anteriores.
+
+---
+
+6. Carta
+
+Productos vendidos.
+
+Organizados por categorías.
+
+Bubble Tea
+
+Mochis
+
+Corn Dogs
+
+Postres
+
+Café
+
+Entradas
+
+Bebidas
+
+Etcétera.
+
+Cada producto debe estar relacionado con una receta.
+
+---
+
+7. POS
+
+Pantalla de ventas.
+
+Debe ser extremadamente rápida.
+
+Con categorías.
+
+Buscador.
+
+Productos favoritos.
+
+Carrito.
+
+Métodos de pago.
+
+Descuentos.
+
+Impresión de factura.
+
+Reimpresión.
+
+Cancelar venta.
+
+Anular venta.
+
+Venta rápida.
+
+Venta con observaciones.
+
+Al finalizar una venta
+
+Guardar factura.
+
+Descontar inventario.
+
+Actualizar estadísticas.
+
+Actualizar ganancias.
+
+Registrar movimiento.
+
+---
+
+8. Movimientos de Inventario
+
+Cada movimiento debe quedar registrado.
+
+Entrada.
+
+Salida.
+
+Producción.
+
+Compra.
+
+Venta.
+
+Ajuste manual.
+
+Debe poder consultarse el historial completo.
+
+---
+
+9. Alertas
+
+Inventario bajo.
+
+Inventario agotado.
+
+Productos próximos a vencer (si aplica).
+
+Productos sin movimiento.
+
+Productos más vendidos.
+
+Productos menos vendidos.
+
+---
+
+10. Costos
+
+Cada receta debe conocer automáticamente su costo.
+
+Debe calcular
+
+Costo por ingrediente.
+
+Costo total.
+
+Costo del empaque.
+
+Costo final.
+
+Ganancia bruta.
+
+Margen.
+
+Rentabilidad.
+
+Todo automáticamente.
+
+---
+
+11. Reportes
+
+Debe existir un Centro de Reportes.
+
+Debe permitir exportar Excel.
+
+Con filtros:
+
+Últimas 24 horas.
+
+Hoy.
+
+Ayer.
+
+Esta semana.
+
+Este mes.
+
+Este año.
+
+Rango personalizado.
+
+Muy importante:
+
+Si exporto un reporte semanal un miércoles, el Excel debe contener los siete días de la semana.
+
+Lunes con información.
+
+Martes con información.
+
+Miércoles con la información acumulada hasta el momento de exportar.
+
+Jueves vacío.
+
+Viernes vacío.
+
+Sábado vacío.
+
+Domingo vacío.
+
+Lo mismo para reportes mensuales y anuales.
+
+Nunca debe impedir exportar porque el período aún no termina.
+
+---
+
+REPORTES A EXPORTAR
+
+Ventas
+
+- Total vendido
+- Número de ventas
+- Ticket promedio
+- Producto más vendido
+- Producto menos vendido
+
+Ganancias
+
+- Ingreso bruto
+- Costo de materias primas
+- Utilidad bruta
+- Gastos operativos
+- Utilidad neta
+
+Inventario
+
+- Inventario inicial
+- Inventario final
+- Materia prima utilizada
+- Productos consumidos
+- Productos producidos
+- Entradas
+- Salidas
+- Ajustes
+
+Compras
+
+- Fecha
+- Proveedor
+- Producto
+- Cantidad
+- Precio unitario
+- Total
+- IVA
+
+Producción
+
+- Productos preparados
+- Cantidades
+- Costos
+- Responsable
+
+Todo debe exportarse en archivos Excel profesionales.
+
+Con hojas separadas.
+
+Tablas.
+
+Totales.
+
+Formato.
+
+Filtros.
+
+---
+
+HISTORIAL RECONSTRUIBLE
+
+Quiero una función llamada Historial Reconstruible.
+
+Debe permitir seleccionar cualquier fecha del pasado.
+
+Y reconstruir completamente ese día.
+
+Ejemplo
+
+18 de agosto de 2026
+
+Debe mostrar
+
+Ventas realizadas.
+
+Facturas.
+
+Clientes (si existen).
+
+Métodos de pago.
+
+Productos vendidos.
+
+Materia prima utilizada.
+
+Producción realizada.
+
+Compras realizadas.
+
+Inventario al iniciar el día.
+
+Inventario al finalizar el día.
+
+Ganancia bruta.
+
+Ganancia neta.
+
+Productos agotados.
+
+Alertas.
+
+Todo exactamente como ocurrió ese día.
+
+---
+
+DASHBOARD
+
+Debe mostrar
+
+Ventas del día.
+
+Ventas del mes.
+
+Ventas del año.
+
+Ganancias.
+
+Productos más vendidos.
+
+Productos menos vendidos.
+
+Inventario bajo.
+
+Compras recientes.
+
+Gráficos.
+
+Indicadores.
+
+---
+
+SEGURIDAD
+
+Usuarios.
+
+Roles.
+
+Administrador.
+
+Empleado.
+
+Permisos.
+
+Registro de actividad.
+
+Historial de acciones.
+
+Inicio de sesión seguro.
+
+---
+
+BASE DE DATOS
+
+Diseñar correctamente todas las tablas.
+
+Todas las relaciones.
+
+Todas las claves foráneas.
+
+Índices.
+
+Normalización.
+
+Integridad referencial.
+
+Migraciones.
+
+Todo documentado.
+
+---
+
+CALIDAD DEL CÓDIGO
+
+Código limpio.
+
+Arquitectura escalable.
+
+Buenas prácticas.
+
+Componentes reutilizables.
+
+Sin duplicación.
+
+Fácil mantenimiento.
+
+---
+
+EXPLICACIONES
+
+No quiero únicamente el código.
+
+Quiero que cada módulo venga acompañado de una explicación sencilla indicando:
+
+- Qué hace.
+- Cómo funciona.
+- Cómo se conecta con los demás módulos.
+- Qué tablas utiliza.
+- Qué archivos intervienen.
+- Cómo modificarlo en el futuro.
+
+Explica todo como si estuvieras enseñándome a mantener el sistema por mi cuenta.
+
+El objetivo final es obtener un sistema POS/ERP profesional, completamente funcional, bien documentado, escalable, mantenible y listo para administrar una cafetería coreana especializada en bubble tea, mochis, corn dogs, postres y bebidas, con control total de inventario, producción, compras, recetas, ventas, costos, utilidades y reportes.
