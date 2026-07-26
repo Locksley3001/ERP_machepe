@@ -722,13 +722,33 @@ tr:last-child td {
 
 .line-row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) 42px;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) 42px;
   gap: 10px;
   align-items: end;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface-strong);
+}
+
+.calculated-field {
+  display: grid;
+  align-content: center;
+  min-height: 42px;
+  padding: 8px 11px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--primary) 7%, var(--surface));
+}
+
+.calculated-field span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.calculated-field strong {
+  margin-top: 3px;
+  font-size: 0.95rem;
 }
 
 .form-actions {

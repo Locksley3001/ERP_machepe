@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { parseLocalizedNumber } from "@/lib/number-format";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 const optionalText = z.string().trim().optional().default("");
-const money = z.coerce.number().min(0).default(0);
-const anyQuantity = z.coerce.number();
-const nonNegativeQuantity = z.coerce.number().min(0).default(0);
-const positiveQuantity = z.coerce.number().positive();
+const localizedNumber = () => z.preprocess(parseLocalizedNumber, z.number());
+const money = localizedNumber().pipe(z.number().min(0)).default(0);
+const anyQuantity = localizedNumber();
+const nonNegativeQuantity = localizedNumber().pipe(z.number().min(0)).default(0);
+const positiveQuantity = localizedNumber().pipe(z.number().positive());
 
 const supplierSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio"),
@@ -81,7 +83,7 @@ const purchaseSchema = z.object({
         inventoryItemId: z.string().uuid(),
         quantity: positiveQuantity,
         unitCost: money,
-        taxRate: z.coerce.number().min(0).max(1).default(0),
+        taxRate: localizedNumber().pipe(z.number().min(0).max(1)).default(0),
         discount: money
       })
     )

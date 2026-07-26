@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { AppData } from "@/lib/app-data";
 import type { ModuleKey } from "@/lib/domain";
+import { formatMoneyInput, formatNumber, parseLocalizedNumber } from "@/lib/number-format";
 
 type DynamicRow = {
   id: string;
@@ -284,13 +285,18 @@ function InventoryFields({
   suppliers: AppData["suppliers"];
   categories: string[];
 }) {
+  const [quantity, setQuantity] = useState("0");
+  const [purchaseCost, setPurchaseCost] = useState("0");
+  const [unit, setUnit] = useState("");
+  const unitCost = parseLocalizedNumber(quantity) > 0 ? parseLocalizedNumber(purchaseCost) / parseLocalizedNumber(quantity) : 0;
+
   return (
     <div className="form-grid">
       <Field name="code" label="Codigo unico" required />
       <Field name="name" label="Nombre" required />
       <DatalistField name="category" label="Categoria" options={categories} />
       <label className="field">
-        <span>Tipo</span>
+        <span>Tipo de producto</span>
         <select name="kind" required defaultValue="raw_material">
           {inventoryKinds.map(([value, label]) => (
             <option key={value} value={value}>
@@ -299,13 +305,20 @@ function InventoryFields({
           ))}
         </select>
       </label>
-      <Field name="unit" label="Unidad de medida" placeholder="g, ml, und" required />
-      <Field name="quantity" label="Cantidad inicial" type="number" step="0.001" defaultValue="0" />
-      <Field name="minimumQuantity" label="Cantidad minima" type="number" step="0.001" defaultValue="0" />
-      <Field name="maximumQuantity" label="Cantidad maxima" type="number" step="0.001" defaultValue="0" />
-      <Field name="purchaseCost" label="Costo compra" type="number" step="0.01" defaultValue="0" />
-      <Field name="averageCost" label="Costo promedio" type="number" step="0.01" defaultValue="0" />
-      <Field name="referencePrice" label="Precio referencia" type="number" step="0.01" defaultValue="0" />
+      <label className="field">
+        <span>Unidad base de inventario</span>
+        <input name="unit" placeholder="g, ml, und" required value={unit} onChange={(event) => setUnit(event.target.value)} />
+      </label>
+      <NumberField name="quantity" label="Cantidad inicial en unidad base" value={quantity} onChange={setQuantity} />
+      <NumberField name="minimumQuantity" label="Cantidad minima permitida" defaultValue="0" />
+      <NumberField name="maximumQuantity" label="Cantidad maxima recomendada" defaultValue="0" />
+      <MoneyField name="purchaseCost" label="Costo total de compra" value={purchaseCost} onChange={setPurchaseCost} />
+      <input type="hidden" name="averageCost" value={unitCost} />
+      <ReadOnlyMetric
+        label="Costo automatico por unidad base"
+        value={unitCost ? `${formatNumber(unitCost, 2)} por ${unit || "unidad"}` : "Pendiente"}
+      />
+      <MoneyField name="referencePrice" label="Precio de referencia opcional" defaultValue="0" />
       <Field name="location" label="Ubicacion" />
       <Field name="barcode" label="Codigo de barras" />
       <Field name="imageUrl" label="URL imagen" />
@@ -330,9 +343,9 @@ function MenuFields({ categories }: { categories: string[] }) {
   return (
     <div className="form-grid">
       <Field name="sku" label="SKU" required />
-      <Field name="name" label="Nombre" required />
-      <DatalistField name="category" label="Categoria" options={categories} />
-      <Field name="price" label="Precio de venta" type="number" step="0.01" defaultValue="0" />
+      <Field name="name" label="Nombre del producto en carta" required />
+      <DatalistField name="category" label="Categoria de carta" options={categories} />
+      <MoneyField name="price" label="Precio de venta al cliente" defaultValue="0" />
       <label className="check-row">
         <input type="checkbox" name="favorite" />
         <span>Favorito en POS</span>
@@ -380,7 +393,7 @@ function RecipeFields({
         <Textarea name="notes" label="Notas" />
       </div>
       <LineEditor title="Ingredientes y empaques" rows={rows} addRow={addRow} removeRow={removeRow}>
-        {(row) => <InventoryLine row={row} items={items} showUnit showCost />}
+        {(row) => <RecipeIngredientLine row={row} items={items} />}
       </LineEditor>
     </>
   );
@@ -453,7 +466,7 @@ function ProductionFields({
         <Textarea name="notes" label="Notas" />
       </div>
       <LineEditor title="Insumos consumidos" rows={rows} addRow={addRow} removeRow={removeRow}>
-        {(row) => <InventoryLine row={row} items={items} showCost />}
+        {(row) => <InventoryLine row={row} items={items} autoCost />}
       </LineEditor>
     </>
   );
@@ -473,8 +486,8 @@ function MovementFields({ items }: { items: AppData["inventoryItems"] }) {
           ))}
         </select>
       </label>
-      <Field name="quantity" label="Cantidad (+ entrada / - salida)" type="number" step="0.001" required />
-      <Field name="unitCost" label="Costo unitario" type="number" step="0.01" defaultValue="0" />
+      <NumberField name="quantity" label="Cantidad del ajuste (+ entrada / - salida)" required />
+      <MoneyField name="unitCost" label="Costo unitario del ajuste" defaultValue="0" />
       <Textarea name="notes" label="Motivo del ajuste" />
     </div>
   );
@@ -536,19 +549,21 @@ function LineEditor({
 function InventoryLine({
   row,
   items,
-  showUnit = false,
-  showCost = false
+  autoCost = false
 }: {
   row: DynamicRow;
   items: AppData["inventoryItems"];
-  showUnit?: boolean;
-  showCost?: boolean;
+  autoCost?: boolean;
 }) {
+  const [selectedId, setSelectedId] = useState("");
+  const selectedItem = items.find((item) => item.id === selectedId);
+  const cost = selectedItem?.averageCost ?? 0;
+
   return (
     <>
       <label className="field">
         <span>Articulo</span>
-        <select name={`inventoryItemId-${row.id}`} required defaultValue="">
+        <select name={`inventoryItemId-${row.id}`} required value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
           <option value="">Seleccionar</option>
           {items.map((item) => (
             <option key={item.id} value={item.id}>
@@ -557,9 +572,13 @@ function InventoryLine({
           ))}
         </select>
       </label>
-      <Field name={`quantity-${row.id}`} label="Cantidad" type="number" step="0.001" required />
-      {showUnit ? <Field name={`unit-${row.id}`} label="Unidad" required /> : null}
-      {showCost ? <Field name={`unitCost-${row.id}`} label="Costo unitario" type="number" step="0.01" defaultValue="0" /> : null}
+      <NumberField name={`quantity-${row.id}`} label={`Cantidad${selectedItem ? ` en ${selectedItem.unit}` : ""}`} required />
+      {autoCost ? (
+        <>
+          <input type="hidden" name={`unitCost-${row.id}`} value={cost} />
+          <ReadOnlyMetric label="Costo unitario automatico" value={selectedItem ? `${formatNumber(cost, 2)} / ${selectedItem.unit}` : "Selecciona articulo"} />
+        </>
+      ) : null}
     </>
   );
 }
@@ -568,9 +587,46 @@ function PurchaseLine({ row, items }: { row: DynamicRow; items: AppData["invento
   return (
     <>
       <InventoryLine row={row} items={items} />
-      <Field name={`unitCost-${row.id}`} label="Costo unitario" type="number" step="0.01" defaultValue="0" />
-      <Field name={`taxRate-${row.id}`} label="IVA decimal" type="number" step="0.01" defaultValue="0" />
-      <Field name={`discount-${row.id}`} label="Descuento" type="number" step="0.01" defaultValue="0" />
+      <MoneyField name={`unitCost-${row.id}`} label="Costo unitario comprado" defaultValue="0" />
+      <NumberField name={`taxRate-${row.id}`} label="IVA en decimal (0,19)" defaultValue="0" />
+      <MoneyField name={`discount-${row.id}`} label="Descuento de la linea" defaultValue="0" />
+    </>
+  );
+}
+
+function RecipeIngredientLine({ row, items }: { row: DynamicRow; items: AppData["inventoryItems"] }) {
+  const [selectedId, setSelectedId] = useState("");
+  const [amount, setAmount] = useState("");
+  const selectedItem = items.find((item) => item.id === selectedId);
+  const unitCost = selectedItem?.averageCost ?? 0;
+  const totalCost = parseLocalizedNumber(amount) * unitCost;
+
+  return (
+    <>
+      <label className="field">
+        <span>Ingrediente o empaque</span>
+        <select name={`inventoryItemId-${row.id}`} required value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
+          <option value="">Seleccionar</option>
+          {items.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.name} ({item.unit})
+            </option>
+          ))}
+        </select>
+      </label>
+      <NumberField
+        name={`quantity-${row.id}`}
+        label={selectedItem ? `Cantidad usada en ${selectedItem.unit}` : "Cantidad usada"}
+        value={amount}
+        onChange={setAmount}
+        required
+      />
+      <input type="hidden" name={`unit-${row.id}`} value={selectedItem?.unit ?? ""} />
+      <input type="hidden" name={`unitCost-${row.id}`} value={unitCost} />
+      <ReadOnlyMetric
+        label="Costo automatico"
+        value={selectedItem ? `${formatNumber(unitCost, 2)} / ${selectedItem.unit} = ${formatNumber(totalCost, 0)}` : "Selecciona articulo"}
+      />
     </>
   );
 }
@@ -604,6 +660,90 @@ function Field({
         placeholder={placeholder}
       />
     </label>
+  );
+}
+
+function NumberField({
+  name,
+  label,
+  required = false,
+  defaultValue,
+  value,
+  onChange
+}: {
+  name: string;
+  label: string;
+  required?: boolean;
+  defaultValue?: string;
+  value?: string;
+  onChange?: (value: string) => void;
+}) {
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    const parsed = parseLocalizedNumber(event.target.value);
+    const formatted = parsed ? formatNumber(parsed, 3) : "";
+    event.target.value = formatted;
+    onChange?.(formatted);
+  };
+
+  return (
+    <label className="field">
+      <span>{label}</span>
+      <input
+        name={name}
+        inputMode="decimal"
+        required={required}
+        value={value}
+        defaultValue={value === undefined ? defaultValue : undefined}
+        onChange={onChange ? (event) => onChange(event.target.value) : undefined}
+        onBlur={handleBlur}
+      />
+    </label>
+  );
+}
+
+function MoneyField({
+  name,
+  label,
+  required = false,
+  defaultValue,
+  value,
+  onChange
+}: {
+  name: string;
+  label: string;
+  required?: boolean;
+  defaultValue?: string;
+  value?: string;
+  onChange?: (value: string) => void;
+}) {
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    const formatted = formatMoneyInput(event.target.value);
+    event.target.value = formatted;
+    onChange?.(formatted);
+  };
+
+  return (
+    <label className="field">
+      <span>{label}</span>
+      <input
+        name={name}
+        inputMode="numeric"
+        required={required}
+        value={value}
+        defaultValue={value === undefined ? defaultValue : undefined}
+        onChange={onChange ? (event) => onChange(event.target.value) : undefined}
+        onBlur={handleBlur}
+      />
+    </label>
+  );
+}
+
+function ReadOnlyMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="calculated-field">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   );
 }
 

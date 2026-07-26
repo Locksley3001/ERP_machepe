@@ -176,6 +176,10 @@ El costo de receta se calcula sumando cantidad por costo unitario de cada ingred
 Con eso se obtiene:
 costo de ingredientes, costo de empaque, costo final, utilidad bruta, margen y rentabilidad.
 
+Cuando se crea un articulo de inventario, el sistema calcula el costo por unidad base. Ejemplo: si registras 500 g y costo total 20.000, el costo automatico es 40 por g. Esa unidad base puede ser g, ml, und u otra unidad operativa.
+
+Cuando se crea una receta, la unidad y el costo unitario vienen del articulo seleccionado. Por eso el formulario de receta solo pide el ingrediente/empaque y la cantidad usada. Si el articulo es polvo en gramos, escribes los gramos usados. Si es empaque por unidad, escribes la cantidad de unidades usadas. El costo de la linea se calcula automaticamente.
+
 18. REPORTES Y EXCEL
 
 El centro de reportes usa app/api/reports/export/route.ts con ExcelJS.
