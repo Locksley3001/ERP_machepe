@@ -75,7 +75,7 @@ Ejemplos:
 - Cómo configurar las variables de entorno.
 - Cómo crear las tablas.
 - Cómo ejecutar las migraciones.
-- Cómo desplegar el proyecto en Vercel.
+- Cómo desplegar el proyecto en render.
 - Cómo volver a conectarlo si cambio de computador.
 - Cómo realizar copias de seguridad.
 - Cómo restaurar una copia.

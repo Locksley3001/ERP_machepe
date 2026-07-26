@@ -1,0 +1,272 @@
+MANUAL DEL SISTEMA ERP POS CAFETERIA
+
+1. RESUMEN
+
+Este proyecto es una aplicacion web tipo PWA para administrar una cafeteria coreana con bubble tea, mochis, corn dogs, postres y bebidas. La base tecnica es Next.js, React, TypeScript, Supabase Auth, Supabase PostgreSQL, ExcelJS y Chart.js.
+
+La aplicacion tiene modulos para dashboard, POS, inventario, proveedores, compras, produccion, recetas, carta, movimientos, alertas, costos, reportes, historial reconstruible y seguridad.
+
+2. COMO FUNCIONA LA ARQUITECTURA
+
+La carpeta app contiene las paginas y API routes de Next.js.
+La carpeta components contiene piezas visuales reutilizables.
+La carpeta lib contiene reglas de negocio, tipos TypeScript, datos semilla, calculos y conexion a Supabase.
+La carpeta supabase/migrations contiene el esquema SQL que crea tablas, relaciones, indices, triggers, politicas RLS y tipos de datos.
+
+Cuando Supabase no esta configurado, la aplicacion muestra datos semilla para que puedas abrir y revisar la interfaz. Cuando configuras las variables de entorno, la autenticacion real queda disponible y el middleware protege los modulos internos.
+
+3. CREAR CUENTA EN SUPABASE
+
+1. Entra a https://supabase.com.
+2. Crea una cuenta.
+3. Crea una organizacion.
+4. Crea un proyecto nuevo.
+5. Elige una region cercana a tu negocio.
+6. Guarda la contrasena de base de datos en un lugar seguro.
+7. Espera a que Supabase termine de crear el proyecto.
+
+4. OBTENER API KEYS
+
+1. Abre tu proyecto en Supabase.
+2. Entra a Project Settings.
+3. Entra a API.
+4. Copia Project URL.
+5. Copia anon public key.
+6. Copia service_role key solo para el servidor. No la publiques.
+
+5. CONFIGURAR VARIABLES DE ENTORNO
+
+Crea un archivo llamado .env.local en la raiz del proyecto con:
+
+NEXT_PUBLIC_SUPABASE_URL=tu_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key
+SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+En Vercel debes crear las mismas variables en Project Settings, Environment Variables.
+
+6. CREAR TABLAS Y MIGRACIONES
+
+La migracion principal esta en supabase/migrations/001_initial_schema.sql.
+
+Opcion sencilla desde Supabase:
+
+1. Abre Supabase.
+2. Entra a SQL Editor.
+3. Copia el contenido de 001_initial_schema.sql.
+4. Ejecuta el script.
+5. Verifica que aparezcan las tablas en Table Editor.
+
+Opcion profesional con Supabase CLI:
+
+1. Instala Supabase CLI.
+2. Ejecuta supabase login.
+3. Ejecuta supabase link --project-ref TU_PROJECT_REF.
+4. Ejecuta supabase db push.
+
+7. AUTENTICACION
+
+Supabase Auth maneja usuarios y sesiones. La tabla profiles guarda el nombre, rol y estado del usuario. Los roles iniciales son admin y employee.
+
+Administrador: puede gestionar catalogos, inventario, proveedores, recetas, usuarios y gastos.
+Empleado: puede operar POS, consultar datos y registrar operaciones permitidas.
+
+El archivo middleware.ts revisa si existe una sesion activa. Si el usuario no inicio sesion e intenta entrar a un modulo protegido, lo envia a /login.
+
+8. INVENTARIO
+
+El modulo inventario administra materias primas, empaques, productos preparados, productos finales, limpieza, activos, herramientas y equipos.
+
+Tabla principal: inventory_items.
+Tablas relacionadas: categories, suppliers, inventory_movements.
+
+Campos importantes:
+codigo unico, nombre, categoria, tipo, unidad, cantidad actual, minimo, maximo, costo de compra, costo promedio, precio de referencia, estado, ubicacion, codigo de barras, imagen, proveedor y observaciones.
+
+Cada entrada o salida debe registrarse como inventory_movements. El trigger apply_inventory_movement actualiza automaticamente la cantidad del articulo y refresh_inventory_status recalcula si esta activo, bajo o agotado.
+
+9. PROVEEDORES
+
+El modulo proveedores registra una sola vez a cada proveedor. Luego compras e inventario lo referencian por supplier_id.
+
+Tabla principal: suppliers.
+
+Cuando cambias datos de contacto, no se duplican proveedores. Se actualiza el registro existente para mantener limpia la informacion.
+
+10. COMPRAS
+
+Una compra nunca debe editar el inventario manualmente. Debe crear:
+purchases para encabezado de factura.
+purchase_lines para productos, cantidades, costos, IVA y descuentos.
+inventory_movements con tipo purchase para aumentar inventario.
+
+Flujo esperado:
+1. Elegir proveedor.
+2. Capturar numero de factura.
+3. Agregar productos y cantidades.
+4. Guardar compra.
+5. El sistema aumenta inventario y deja historial.
+
+11. PRODUCCION
+
+Produccion transforma insumos en productos preparados. Ejemplo: tapioca cocida.
+
+Tablas:
+production_batches: lote producido.
+production_inputs: materias primas usadas.
+inventory_movements: salidas de insumos y entrada del producto producido.
+
+Flujo:
+1. Elegir producto producido.
+2. Registrar cantidad final.
+3. Registrar insumos consumidos.
+4. Guardar responsable.
+5. El sistema descuenta insumos, aumenta producto producido y registra costo.
+
+12. RECETAS
+
+Cada producto vendido debe tener receta. Las recetas consumen ingredientes y empaques.
+
+Tablas:
+recipes: version de receta.
+recipe_items: ingredientes de esa version.
+menu_products: producto vendido.
+
+Las recetas tienen version para que cambios futuros no alteren ventas antiguas. Una venta guarda recipe_id y snapshots de nombre, precio y costo.
+
+13. CARTA
+
+La carta contiene productos vendibles organizados por categoria.
+
+Tabla principal: menu_products.
+Relacion: cada producto debe apuntar a una receta activa antes de venderse en produccion.
+
+14. POS
+
+El POS permite buscar productos, filtrar por categoria, agregar al carrito, cambiar cantidades, aplicar descuento y seleccionar metodo de pago.
+
+Al finalizar una venta en el flujo productivo se debe:
+1. Crear registro en sales.
+2. Crear sale_lines.
+3. Leer receta activa.
+4. Descontar inventario por cada ingrediente y empaque.
+5. Registrar inventory_movements tipo sale.
+6. Guardar snapshots de precios y costos.
+7. Actualizar indicadores y reportes.
+
+15. MOVIMIENTOS DE INVENTARIO
+
+Toda modificacion real del inventario pasa por inventory_movements.
+
+Tipos:
+purchase, sale, production_input, production_output, manual_adjustment.
+
+Esto permite auditoria, reconstruccion historica y calculo de inventario inicial/final.
+
+16. ALERTAS
+
+Las alertas se calculan comparando quantity con minimum_quantity y maximum_quantity. Tambien se puede extender con expiration_date y movimientos recientes para detectar vencimientos o productos sin movimiento.
+
+17. COSTOS
+
+El costo de receta se calcula sumando cantidad por costo unitario de cada ingrediente.
+
+Con eso se obtiene:
+costo de ingredientes, costo de empaque, costo final, utilidad bruta, margen y rentabilidad.
+
+18. REPORTES Y EXCEL
+
+El centro de reportes usa app/api/reports/export/route.ts con ExcelJS.
+
+Hojas exportadas:
+Resumen, Ventas, Inventario, Compras, Produccion y Movimientos.
+
+Regla importante:
+Los reportes semanales, mensuales y anuales siempre incluyen el periodo completo. Si exportas una semana un miercoles, jueves, viernes, sabado y domingo salen como pendientes o vacios. El sistema no bloquea exportaciones por periodos no terminados.
+
+19. HISTORIAL RECONSTRUIBLE
+
+La funcion reconstructDay reconstruye un dia con ventas, compras, produccion, movimientos, inventario inicial, inventario final, utilidad bruta y alertas.
+
+En produccion esta funcion debe consultar PostgreSQL por fecha y no depender de datos semilla. La arquitectura ya separa el calculo en lib/reports.ts para cambiar la fuente de datos sin rehacer la pantalla.
+
+20. SEGURIDAD
+
+La migracion activa Row Level Security en todas las tablas importantes.
+
+Las politicas permiten lectura a usuarios autenticados y administracion completa a admins en catalogos sensibles.
+
+El audit_log debe recibir eventos para acciones criticas: crear, actualizar, eliminar, anular, login y exportar.
+
+21. COPIAS DE SEGURIDAD
+
+Desde Supabase:
+1. Entra al proyecto.
+2. Ve a Database.
+3. Revisa Backups.
+4. Usa backups automaticos si tu plan los incluye.
+
+Manual:
+1. Usa pg_dump desde una maquina segura.
+2. Guarda el archivo en almacenamiento externo.
+3. Conserva fecha, hora y version del sistema.
+
+Restaurar:
+1. Crea una base nueva o proyecto nuevo.
+2. Importa el dump con psql o Supabase restore.
+3. Configura las mismas variables de entorno en Vercel.
+4. Prueba login, inventario, ventas y reportes.
+
+22. DESPLEGAR EN VERCEL
+
+1. Sube el proyecto a GitHub.
+2. Entra a https://vercel.com.
+3. Importa el repositorio.
+4. Configura variables de entorno.
+5. Ejecuta deploy.
+6. Abre la URL generada.
+7. En Supabase Auth, agrega esa URL como Site URL.
+
+23. DESPLEGAR EN RENDER
+
+Render puede ejecutar Next.js, aunque Vercel es el destino mas natural.
+
+1. Crea un Web Service.
+2. Conecta el repositorio.
+3. Build command: npm install && npm run build.
+4. Start command: npm run start.
+5. Agrega variables de entorno.
+6. Publica el servicio.
+
+24. CAMBIAR DE COMPUTADOR
+
+1. Instala Node.js.
+2. Descarga el repositorio.
+3. Ejecuta npm install.
+4. Crea .env.local con las llaves de Supabase.
+5. Ejecuta npm run dev.
+6. Inicia sesion.
+
+25. COMO AGREGAR NUEVOS MODULOS
+
+1. Agrega una clave nueva en lib/domain.ts si el modulo necesita tipo propio.
+2. Agrega la entrada en lib/navigation.ts.
+3. Agrega la pantalla en components/module-workspace.tsx o crea una ruta dedicada si el modulo es grande.
+4. Crea tablas nuevas en una migracion nueva, nunca editando una migracion ya aplicada en produccion.
+5. Documenta el flujo en este manual.
+
+26. ARCHIVOS IMPORTANTES
+
+app/page.tsx: dashboard.
+app/[module]/page.tsx: rutas modulares.
+app/api/reports/export/route.ts: exportacion Excel.
+components/pos-terminal.tsx: interfaz del POS.
+components/module-workspace.tsx: vistas principales.
+lib/domain.ts: tipos y funciones de negocio.
+lib/reports.ts: periodos, resumen y reconstruccion.
+lib/supabase: conexion a Supabase.
+supabase/migrations/001_initial_schema.sql: base de datos.
+
+27. SIGUIENTE NIVEL RECOMENDADO
+
+Para pasar de base productiva a operacion completa, el siguiente trabajo debe ser reemplazar los datos semilla por repositorios Supabase en cada modulo, agregar formularios persistentes y crear RPC SQL transaccionales para finalizar venta, guardar compra y registrar produccion con rollback automatico si algo falla.
