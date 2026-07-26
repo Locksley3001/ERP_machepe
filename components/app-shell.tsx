@@ -12,8 +12,8 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
             <Coffee size={22} />
           </span>
           <span>
-            <strong>ERP POS</strong>
-            <small>K-Cafe Ops</small>
+            <strong>ERP MACHEPE</strong>
+            <small>MACHEPE</small>
           </span>
         </Link>
 
