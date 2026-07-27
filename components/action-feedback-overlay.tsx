@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+/* eslint-disable @next/next/no-img-element */
 
 type FeedbackStatus = "success" | "error";
 
@@ -19,16 +19,9 @@ const feedbackAssets: Record<FeedbackStatus, string> = {
   error: "/feedback/wrong.svg"
 };
 
-const feedbackAssetSizes: Record<FeedbackStatus, { width: number; height: number }> = {
-  success: { width: 500, height: 400 },
-  error: { width: 512, height: 512 }
-};
-
-export const feedbackDuration = 2650;
+export const feedbackDuration = 1250;
 
 export function ActionFeedbackOverlay({ status, message }: ActionFeedbackOverlayProps) {
-  const assetSize = feedbackAssetSizes[status];
-
   return (
     <div
       className={`feedback-backdrop ${status}`}
@@ -37,16 +30,12 @@ export function ActionFeedbackOverlay({ status, message }: ActionFeedbackOverlay
       aria-label={message ?? defaultMessages[status]}
     >
       <div className="feedback-panel">
-        <Image
+        <img
           key={`${status}-${message ?? defaultMessages[status]}`}
           className="feedback-animation"
           src={feedbackAssets[status]}
-          width={assetSize.width}
-          height={assetSize.height}
           alt=""
           aria-hidden="true"
-          priority
-          unoptimized
           draggable={false}
         />
         <strong>{message ?? defaultMessages[status]}</strong>
