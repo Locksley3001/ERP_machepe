@@ -1,0 +1,19 @@
+Codigo:
+
+<script
+  src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.14/dist/dotlottie-wc.js"
+  type="module"
+></script>
+
+<dotlottie-wc
+  src="https://lottie.host/39a09eba-2164-462c-96a6-21af76a37a8f/gLnP9sEY37.lottie"
+  style="width: 300px;height: 300px"
+  autoplay
+  loop
+></dotlottie-wc>
+
+
+
+Url de oEmbed:
+
+https://lottie.host/embed/39a09eba-2164-462c-96a6-21af76a37a8f/gLnP9sEY37.lottie

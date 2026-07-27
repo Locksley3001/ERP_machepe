@@ -2,7 +2,8 @@
 
 import { Minus, Plus, ReceiptText, Search, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { ActionFeedbackOverlay, feedbackDuration } from "@/components/action-feedback-overlay";
 import { formatCurrency, type MenuProduct, type PaymentMethod } from "@/lib/domain";
 
 type CartLine = {
@@ -10,17 +11,28 @@ type CartLine = {
   quantity: number;
 };
 
+type FeedbackStatus = "success" | "error";
+
+function waitForFeedback() {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, feedbackDuration);
+  });
+}
+
 export function PosTerminal({ products }: { products: MenuProduct[] }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Todas");
   const [cart, setCart] = useState<CartLine[]>([]);
-  const [discount, setDiscount] = useState(0);
+  const [discount, setDiscount] = useState("0");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [feedback, setFeedback] = useState<{ status: FeedbackStatus; message: string } | null>(null);
+  const discountTouched = useRef(false);
   const categories = ["Todas", ...Array.from(new Set(products.map((product) => product.category)))];
+  const discountValue = Math.max(0, Number(discount) || 0);
 
   const filteredProducts = products.filter((product) => {
     const matchesCategory = category === "Todas" || product.category === category;
@@ -65,7 +77,7 @@ export function PosTerminal({ products }: { products: MenuProduct[] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           paymentMethod,
-          discount,
+          discount: discountValue,
           notes,
           lines: cart.map((line) => ({ productId: line.product.id, quantity: line.quantity }))
         })
@@ -76,13 +88,22 @@ export function PosTerminal({ products }: { products: MenuProduct[] }) {
         throw new Error(result.error ?? "No se pudo finalizar la venta.");
       }
 
+      const successMessage = `Venta guardada: ${result.invoiceNumber ?? "factura creada"}.`;
+      setFeedback({ status: "success", message: successMessage });
+      await waitForFeedback();
+      setFeedback(null);
       setCart([]);
-      setDiscount(0);
+      setDiscount("0");
+      discountTouched.current = false;
       setNotes("");
-      setMessage(`Venta guardada: ${result.invoiceNumber ?? "factura creada"}.`);
+      setMessage(successMessage);
       router.refresh();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "No se pudo finalizar la venta.");
+      const errorMessage = error instanceof Error ? error.message : "No se pudo finalizar la venta.";
+      setMessage(errorMessage);
+      setFeedback({ status: "error", message: errorMessage });
+      await waitForFeedback();
+      setFeedback(null);
     } finally {
       setLoading(false);
     }
@@ -90,6 +111,7 @@ export function PosTerminal({ products }: { products: MenuProduct[] }) {
 
   return (
     <div className="pos-layout">
+      {feedback ? <ActionFeedbackOverlay status={feedback.status} message={feedback.message} /> : null}
       <section className="pos-catalog">
         <div className="module-toolbar">
           <div className="global-search compact">
@@ -157,7 +179,15 @@ export function PosTerminal({ products }: { products: MenuProduct[] }) {
             type="number"
             min="0"
             value={discount}
-            onChange={(event) => setDiscount(Number(event.target.value))}
+            onFocus={(event) => {
+              if (!discountTouched.current && event.currentTarget.value === "0") {
+                setDiscount("");
+              }
+            }}
+            onChange={(event) => {
+              discountTouched.current = true;
+              setDiscount(event.target.value);
+            }}
           />
         </label>
 
@@ -168,7 +198,7 @@ export function PosTerminal({ products }: { products: MenuProduct[] }) {
           </div>
           <div>
             <span>Total</span>
-            <strong>{formatCurrency(Math.max(0, subtotal - discount))}</strong>
+            <strong>{formatCurrency(Math.max(0, subtotal - discountValue))}</strong>
           </div>
         </div>
 

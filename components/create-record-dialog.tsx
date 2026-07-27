@@ -2,7 +2,8 @@
 
 import { Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { ActionFeedbackOverlay, feedbackDuration } from "@/components/action-feedback-overlay";
 import type { AppData } from "@/lib/app-data";
 import type { ModuleKey } from "@/lib/domain";
 import { formatMoneyInput, formatNumber, parseLocalizedNumber } from "@/lib/number-format";
@@ -16,6 +17,14 @@ type CreateRecordDialogProps = {
   action: string;
   data: AppData;
 };
+
+type FeedbackStatus = "success" | "error";
+
+function waitForFeedback() {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, feedbackDuration);
+  });
+}
 
 const inventoryKinds = [
   ["raw_material", "Materia prima"],
@@ -33,6 +42,7 @@ export function CreateRecordDialog({ module, action, data }: CreateRecordDialogP
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [rows, setRows] = useState<DynamicRow[]>([{ id: "line-1" }]);
+  const [feedback, setFeedback] = useState<{ status: FeedbackStatus; message: string } | null>(null);
 
   const inventoryCategories = useMemo(
     () => Array.from(new Set(data.inventoryItems.map((item) => item.category).filter(Boolean))),
@@ -71,11 +81,19 @@ export function CreateRecordDialog({ module, action, data }: CreateRecordDialogP
         throw new Error(result.error ?? "No se pudo guardar.");
       }
 
+      const successMessage = "Registro guardado.";
+      setFeedback({ status: "success", message: successMessage });
+      await waitForFeedback();
+      setFeedback(null);
       setOpen(false);
       setRows([{ id: "line-1" }]);
       router.refresh();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "No se pudo guardar.");
+      const errorMessage = error instanceof Error ? error.message : "No se pudo guardar.";
+      setMessage(errorMessage);
+      setFeedback({ status: "error", message: errorMessage });
+      await waitForFeedback();
+      setFeedback(null);
     } finally {
       setLoading(false);
     }
@@ -90,6 +108,7 @@ export function CreateRecordDialog({ module, action, data }: CreateRecordDialogP
 
       {open ? (
         <div className="modal-backdrop" role="presentation">
+          {feedback ? <ActionFeedbackOverlay status={feedback.status} message={feedback.message} /> : null}
           <section className="modal-panel" role="dialog" aria-modal="true" aria-label={action}>
             <div className="modal-header">
               <div>
@@ -392,7 +411,7 @@ function RecipeFields({
         </label>
         <Textarea name="notes" label="Notas" />
       </div>
-      <LineEditor title="Ingredientes y empaques" rows={rows} addRow={addRow} removeRow={removeRow}>
+      <LineEditor title="Ingredientes y empaques" rows={rows} addRow={addRow} removeRow={removeRow} rowClassName="recipe-line-row">
         {(row) => <RecipeIngredientLine row={row} items={items} />}
       </LineEditor>
     </>
@@ -515,12 +534,14 @@ function LineEditor({
   rows,
   addRow,
   removeRow,
+  rowClassName,
   children
 }: {
   title: string;
   rows: DynamicRow[];
   addRow: () => void;
   removeRow: (id: string) => void;
+  rowClassName?: string;
   children: (row: DynamicRow) => React.ReactNode;
 }) {
   return (
@@ -534,7 +555,7 @@ function LineEditor({
       </div>
       <div className="line-list">
         {rows.map((row) => (
-          <div className="line-row" key={row.id}>
+          <div className={rowClassName ? `line-row ${rowClassName}` : "line-row"} key={row.id}>
             {children(row)}
             <button className="icon-button" type="button" onClick={() => removeRow(row.id)} aria-label="Eliminar linea">
               <X size={16} />
@@ -678,6 +699,20 @@ function NumberField({
   value?: string;
   onChange?: (value: string) => void;
 }) {
+  const hasManualValue = useRef(false);
+
+  const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
+    if (!hasManualValue.current && event.currentTarget.value === "0") {
+      event.currentTarget.value = "";
+      onChange?.("");
+    }
+  };
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    hasManualValue.current = true;
+    onChange?.(event.target.value);
+  };
+
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
     const parsed = parseLocalizedNumber(event.target.value);
     const formatted = parsed ? formatNumber(parsed, 3) : "";
@@ -694,7 +729,8 @@ function NumberField({
         required={required}
         value={value}
         defaultValue={value === undefined ? defaultValue : undefined}
-        onChange={onChange ? (event) => onChange(event.target.value) : undefined}
+        onFocus={handleFocus}
+        onChange={handleChange}
         onBlur={handleBlur}
       />
     </label>
@@ -716,6 +752,20 @@ function MoneyField({
   value?: string;
   onChange?: (value: string) => void;
 }) {
+  const hasManualValue = useRef(false);
+
+  const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
+    if (!hasManualValue.current && event.currentTarget.value === "0") {
+      event.currentTarget.value = "";
+      onChange?.("");
+    }
+  };
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    hasManualValue.current = true;
+    onChange?.(event.target.value);
+  };
+
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
     const formatted = formatMoneyInput(event.target.value);
     event.target.value = formatted;
@@ -731,7 +781,8 @@ function MoneyField({
         required={required}
         value={value}
         defaultValue={value === undefined ? defaultValue : undefined}
-        onChange={onChange ? (event) => onChange(event.target.value) : undefined}
+        onFocus={handleFocus}
+        onChange={handleChange}
         onBlur={handleBlur}
       />
     </label>

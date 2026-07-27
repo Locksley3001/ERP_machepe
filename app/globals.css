@@ -48,7 +48,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -212,6 +213,36 @@ a {
 .primary-action:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+.feedback-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(5px);
+  cursor: wait;
+}
+
+.feedback-panel {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: min(430px, 88vw);
+  padding: 18px;
+  text-align: center;
+  color: #ffffff;
+}
+
+.feedback-panel strong {
+  max-width: 100%;
+  font-size: clamp(1.05rem, 2vw, 1.28rem);
+  line-height: 1.25;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.4);
+  overflow-wrap: anywhere;
 }
 
 .module-header {
@@ -549,6 +580,15 @@ tr:last-child td {
   min-height: 42px;
 }
 
+.cart-panel > .field + .primary-action,
+.cart-panel > .form-message + .primary-action {
+  margin-top: 14px;
+}
+
+.cart-panel > .field + .form-message {
+  margin-top: 10px;
+}
+
 .recipe-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -701,6 +741,7 @@ tr:last-child td {
 .line-editor {
   display: grid;
   gap: 12px;
+  margin-top: 8px;
 }
 
 .line-editor-header {
@@ -729,6 +770,10 @@ tr:last-child td {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface-strong);
+}
+
+.recipe-line-row {
+  grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 0.95fr) minmax(190px, 1fr) 42px;
 }
 
 .calculated-field {

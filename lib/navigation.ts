@@ -41,13 +41,6 @@ export const navigationItems: NavigationItem[] = [
     icon: Store
   },
   {
-    key: "inventory",
-    href: "/inventory",
-    label: "Inventario",
-    description: "Materias primas, empaques, activos, herramientas y equipos.",
-    icon: Boxes
-  },
-  {
     key: "suppliers",
     href: "/suppliers",
     label: "Proveedores",
@@ -60,6 +53,13 @@ export const navigationItems: NavigationItem[] = [
     label: "Compras",
     description: "Entradas con factura que actualizan inventario e historial.",
     icon: ShoppingBag
+  },
+  {
+    key: "inventory",
+    href: "/inventory",
+    label: "Inventario",
+    description: "Materias primas, empaques, activos, herramientas y equipos.",
+    icon: Boxes
   },
   {
     key: "production",
@@ -90,13 +90,6 @@ export const navigationItems: NavigationItem[] = [
     icon: History
   },
   {
-    key: "alerts",
-    href: "/alerts",
-    label: "Alertas",
-    description: "Bajo stock, agotados, vencimientos y baja rotacion.",
-    icon: AlertTriangle
-  },
-  {
     key: "costs",
     href: "/costs",
     label: "Costos",
@@ -116,6 +109,13 @@ export const navigationItems: NavigationItem[] = [
     label: "Historial",
     description: "Reconstruccion exacta de cualquier dia pasado.",
     icon: FileClock
+  },
+  {
+    key: "alerts",
+    href: "/alerts",
+    label: "Alertas",
+    description: "Bajo stock, agotados, vencimientos y baja rotacion.",
+    icon: AlertTriangle
   },
   {
     key: "audit",
