@@ -33,3 +33,13 @@ export function formatMoneyInput(value: unknown) {
   const parsed = parseLocalizedNumber(value);
   return parsed ? formatNumber(parsed, 0) : "";
 }
+
+export function formatMoneyTyping(value: unknown) {
+  const digits = String(value ?? "").replace(/\D/g, "");
+
+  if (!digits) {
+    return "";
+  }
+
+  return formatNumber(Number(digits), 0);
+}

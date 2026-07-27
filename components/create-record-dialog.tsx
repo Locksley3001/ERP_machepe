@@ -6,7 +6,7 @@ import { useMemo, useRef, useState } from "react";
 import { ActionFeedbackOverlay, feedbackDuration } from "@/components/action-feedback-overlay";
 import type { AppData } from "@/lib/app-data";
 import type { ModuleKey } from "@/lib/domain";
-import { formatMoneyInput, formatNumber, parseLocalizedNumber } from "@/lib/number-format";
+import { formatMoneyInput, formatMoneyTyping, formatNumber, parseLocalizedNumber } from "@/lib/number-format";
 
 type DynamicRow = {
   id: string;
@@ -43,6 +43,7 @@ export function CreateRecordDialog({ module, action, data }: CreateRecordDialogP
   const [message, setMessage] = useState("");
   const [rows, setRows] = useState<DynamicRow[]>([{ id: "line-1" }]);
   const [feedback, setFeedback] = useState<{ status: FeedbackStatus; message: string } | null>(null);
+  const [formWasValidated, setFormWasValidated] = useState(false);
   const submitInFlight = useRef(false);
 
   const inventoryCategories = useMemo(
@@ -64,6 +65,7 @@ export function CreateRecordDialog({ module, action, data }: CreateRecordDialogP
 
   async function submitForm(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setFormWasValidated(true);
     if (submitInFlight.current) {
       return;
     }
@@ -93,6 +95,7 @@ export function CreateRecordDialog({ module, action, data }: CreateRecordDialogP
       await waitForFeedback();
       setFeedback(null);
       setOpen(false);
+      setFormWasValidated(false);
       setRows([{ id: "line-1" }]);
       router.refresh();
     } catch (error) {
@@ -128,7 +131,21 @@ export function CreateRecordDialog({ module, action, data }: CreateRecordDialogP
               </button>
             </div>
 
-            <form className="record-form" onSubmit={submitForm}>
+            <form
+              className={formWasValidated ? "record-form was-validated" : "record-form"}
+              onSubmit={submitForm}
+              onInvalidCapture={() => setFormWasValidated(true)}
+              onInput={(event) => {
+                if (formWasValidated && event.currentTarget.checkValidity()) {
+                  setFormWasValidated(false);
+                }
+              }}
+              onChange={(event) => {
+                if (formWasValidated && event.currentTarget.checkValidity()) {
+                  setFormWasValidated(false);
+                }
+              }}
+            >
               {module === "suppliers" ? <SupplierFields /> : null}
               {module === "inventory" ? (
                 <InventoryFields suppliers={data.suppliers} categories={inventoryCategories} />
@@ -613,10 +630,38 @@ function InventoryLine({
 }
 
 function PurchaseLine({ row, items }: { row: DynamicRow; items: AppData["inventoryItems"] }) {
+  const [selectedId, setSelectedId] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [lineTotal, setLineTotal] = useState("0");
+  const selectedItem = items.find((item) => item.id === selectedId);
+  const unitCost = parseLocalizedNumber(quantity) > 0 ? parseLocalizedNumber(lineTotal) / parseLocalizedNumber(quantity) : 0;
+
   return (
     <>
-      <InventoryLine row={row} items={items} />
-      <MoneyField name={`unitCost-${row.id}`} label="Costo unitario comprado" defaultValue="0" />
+      <label className="field">
+        <span>Articulo</span>
+        <select name={`inventoryItemId-${row.id}`} required value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
+          <option value="">Seleccionar</option>
+          {items.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.name} ({item.unit})
+            </option>
+          ))}
+        </select>
+      </label>
+      <NumberField
+        name={`quantity-${row.id}`}
+        label={`Cantidad${selectedItem ? ` en ${selectedItem.unit}` : ""}`}
+        value={quantity}
+        onChange={setQuantity}
+        required
+      />
+      <MoneyField name={`lineTotal-${row.id}`} label="Costo total comprado" value={lineTotal} onChange={setLineTotal} />
+      <input type="hidden" name={`unitCost-${row.id}`} value={unitCost} />
+      <ReadOnlyMetric
+        label="Costo unitario automatico"
+        value={unitCost && selectedItem ? `${formatNumber(unitCost, 2)} / ${selectedItem.unit}` : "Ingresa cantidad y total"}
+      />
       <NumberField name={`taxRate-${row.id}`} label="IVA en decimal (0,19)" defaultValue="0" />
       <MoneyField name={`discount-${row.id}`} label="Descuento de la linea" defaultValue="0" />
     </>
@@ -718,7 +763,9 @@ function NumberField({
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     hasManualValue.current = true;
-    onChange?.(event.target.value);
+    const formatted = formatMoneyTyping(event.target.value);
+    event.target.value = formatted;
+    onChange?.(formatted);
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {

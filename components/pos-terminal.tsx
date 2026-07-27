@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { ActionFeedbackOverlay, feedbackDuration } from "@/components/action-feedback-overlay";
 import { formatCurrency, type MenuProduct, type PaymentMethod } from "@/lib/domain";
+import { formatNumber, parseLocalizedNumber } from "@/lib/number-format";
 
 type CartLine = {
   product: MenuProduct;
@@ -24,7 +25,7 @@ export function PosTerminal({ products }: { products: MenuProduct[] }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Todas");
   const [cart, setCart] = useState<CartLine[]>([]);
-  const [discount, setDiscount] = useState("0");
+  const [discountPercent, setDiscountPercent] = useState("0");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,7 +33,7 @@ export function PosTerminal({ products }: { products: MenuProduct[] }) {
   const [feedback, setFeedback] = useState<{ status: FeedbackStatus; message: string } | null>(null);
   const discountTouched = useRef(false);
   const categories = ["Todas", ...Array.from(new Set(products.map((product) => product.category)))];
-  const discountValue = Math.max(0, Number(discount) || 0);
+  const discountRate = Math.min(100, Math.max(0, parseLocalizedNumber(discountPercent)));
 
   const filteredProducts = products.filter((product) => {
     const matchesCategory = category === "Todas" || product.category === category;
@@ -44,6 +45,8 @@ export function PosTerminal({ products }: { products: MenuProduct[] }) {
     () => cart.reduce((total, line) => total + line.quantity * line.product.price, 0),
     [cart]
   );
+  const discountValue = Math.round(subtotal * (discountRate / 100));
+  const total = Math.max(0, subtotal - discountValue);
 
   function addProduct(product: MenuProduct) {
     setCart((current) => {
@@ -93,7 +96,7 @@ export function PosTerminal({ products }: { products: MenuProduct[] }) {
       await waitForFeedback();
       setFeedback(null);
       setCart([]);
-      setDiscount("0");
+      setDiscountPercent("0");
       discountTouched.current = false;
       setNotes("");
       setMessage(successMessage);
@@ -174,19 +177,19 @@ export function PosTerminal({ products }: { products: MenuProduct[] }) {
         </div>
 
         <label className="field">
-          <span>Descuento</span>
+          <span>Descuento (%)</span>
           <input
-            type="number"
-            min="0"
-            value={discount}
+            inputMode="decimal"
+            value={discountPercent}
             onFocus={(event) => {
               if (!discountTouched.current && event.currentTarget.value === "0") {
-                setDiscount("");
+                setDiscountPercent("");
               }
             }}
             onChange={(event) => {
               discountTouched.current = true;
-              setDiscount(event.target.value);
+              const parsed = Math.min(100, Math.max(0, parseLocalizedNumber(event.target.value)));
+              setDiscountPercent(event.target.value.trim() ? formatNumber(parsed, 2) : "");
             }}
           />
         </label>
@@ -197,8 +200,12 @@ export function PosTerminal({ products }: { products: MenuProduct[] }) {
             <strong>{formatCurrency(subtotal)}</strong>
           </div>
           <div>
+            <span>Descuento ({formatNumber(discountRate, 2)}%)</span>
+            <strong>-{formatCurrency(discountValue)}</strong>
+          </div>
+          <div>
             <span>Total</span>
-            <strong>{formatCurrency(Math.max(0, subtotal - discountValue))}</strong>
+            <strong>{formatCurrency(total)}</strong>
           </div>
         </div>
 

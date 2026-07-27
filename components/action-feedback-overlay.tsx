@@ -19,7 +19,7 @@ const feedbackAssets: Record<FeedbackStatus, string> = {
   error: "/feedback/wrong.svg"
 };
 
-export const feedbackDuration = 1250;
+export const feedbackDuration = 1700;
 
 export function ActionFeedbackOverlay({ status, message }: ActionFeedbackOverlayProps) {
   return (
