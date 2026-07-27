@@ -43,6 +43,7 @@ export function CreateRecordDialog({ module, action, data }: CreateRecordDialogP
   const [message, setMessage] = useState("");
   const [rows, setRows] = useState<DynamicRow[]>([{ id: "line-1" }]);
   const [feedback, setFeedback] = useState<{ status: FeedbackStatus; message: string } | null>(null);
+  const submitInFlight = useRef(false);
 
   const inventoryCategories = useMemo(
     () => Array.from(new Set(data.inventoryItems.map((item) => item.category).filter(Boolean))),
@@ -63,8 +64,14 @@ export function CreateRecordDialog({ module, action, data }: CreateRecordDialogP
 
   async function submitForm(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitInFlight.current) {
+      return;
+    }
+
+    submitInFlight.current = true;
     setLoading(true);
     setMessage("");
+    setFeedback(null);
 
     const form = new FormData(event.currentTarget);
     const payload = buildPayload(module, form, rows);
@@ -95,6 +102,7 @@ export function CreateRecordDialog({ module, action, data }: CreateRecordDialogP
       await waitForFeedback();
       setFeedback(null);
     } finally {
+      submitInFlight.current = false;
       setLoading(false);
     }
   }
@@ -448,7 +456,7 @@ function PurchaseFields({
         <Field name="invoiceNumber" label="Numero de factura" required />
         <Field name="purchasedAt" label="Fecha" type="datetime-local" />
       </div>
-      <LineEditor title="Productos comprados" rows={rows} addRow={addRow} removeRow={removeRow}>
+      <LineEditor title="Productos comprados" rows={rows} addRow={addRow} removeRow={removeRow} rowClassName="purchase-line-row">
         {(row) => <PurchaseLine row={row} items={items} />}
       </LineEditor>
     </>
@@ -484,7 +492,7 @@ function ProductionFields({
         <Field name="producedAt" label="Fecha" type="datetime-local" />
         <Textarea name="notes" label="Notas" />
       </div>
-      <LineEditor title="Insumos consumidos" rows={rows} addRow={addRow} removeRow={removeRow}>
+      <LineEditor title="Insumos consumidos" rows={rows} addRow={addRow} removeRow={removeRow} rowClassName="production-line-row">
         {(row) => <InventoryLine row={row} items={items} autoCost />}
       </LineEditor>
     </>

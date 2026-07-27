@@ -222,27 +222,80 @@ a {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(15, 23, 42, 0.58);
-  backdrop-filter: blur(5px);
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.14), transparent 32%),
+    rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(8px);
   cursor: wait;
+  animation: feedback-backdrop-in 140ms ease-out both;
+}
+
+.feedback-backdrop.success {
+  --feedback-tone: var(--success);
+  --feedback-glow: rgba(21, 128, 61, 0.32);
+}
+
+.feedback-backdrop.error {
+  --feedback-tone: var(--danger);
+  --feedback-glow: rgba(220, 38, 38, 0.3);
 }
 
 .feedback-panel {
   display: grid;
   justify-items: center;
-  gap: 8px;
-  width: min(430px, 88vw);
-  padding: 18px;
+  gap: 10px;
+  width: min(390px, 88vw);
+  padding: 20px 24px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.66);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.32), 0 0 70px var(--feedback-glow);
   text-align: center;
   color: #ffffff;
+  transform-origin: center;
+  animation: feedback-panel-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.feedback-animation {
+  display: block;
+  width: min(280px, 70vw);
+  aspect-ratio: 5 / 4;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.feedback-backdrop.error .feedback-animation {
+  width: min(235px, 64vw);
+  aspect-ratio: 1;
+  margin: 8px 0 12px;
 }
 
 .feedback-panel strong {
   max-width: 100%;
-  font-size: clamp(1.05rem, 2vw, 1.28rem);
+  font-size: clamp(1rem, 2vw, 1.18rem);
   line-height: 1.25;
-  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.4);
   overflow-wrap: anywhere;
+}
+
+@keyframes feedback-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes feedback-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .module-header {
@@ -530,7 +583,8 @@ tr:last-child td {
 
 .field {
   display: grid;
-  gap: 7px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .field span {
@@ -541,8 +595,9 @@ tr:last-child td {
 .field input,
 .field select,
 .field textarea {
-  min-height: 42px;
-  padding: 0 11px;
+  min-height: 44px;
+  width: 100%;
+  padding: 0 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
   outline: 0;
@@ -552,7 +607,7 @@ tr:last-child td {
 
 .field textarea {
   min-height: 88px;
-  padding: 10px 11px;
+  padding: 12px 14px;
   resize: vertical;
 }
 
@@ -691,7 +746,7 @@ tr:last-child td {
 }
 
 .modal-panel {
-  width: min(980px, 100%);
+  width: min(1080px, 100%);
   max-height: min(820px, calc(100vh - 44px));
   overflow: auto;
   border: 1px solid var(--line);
@@ -724,14 +779,15 @@ tr:last-child td {
 
 .record-form {
   display: grid;
-  gap: 18px;
-  padding: 18px;
+  gap: 22px;
+  padding: 20px;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 13px;
+  column-gap: 22px;
+  row-gap: 17px;
 }
 
 .full-span {
@@ -740,8 +796,8 @@ tr:last-child td {
 
 .line-editor {
   display: grid;
-  gap: 12px;
-  margin-top: 8px;
+  gap: 14px;
+  margin-top: 10px;
 }
 
 .line-editor-header {
@@ -758,29 +814,83 @@ tr:last-child td {
 
 .line-list {
   display: grid;
-  gap: 10px;
+  gap: 14px;
 }
 
 .line-row {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr)) 42px;
-  gap: 10px;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) 44px;
+  gap: 16px;
   align-items: end;
-  padding: 12px;
+  padding: 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface-strong);
 }
 
 .recipe-line-row {
-  grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 0.95fr) minmax(190px, 1fr) 42px;
+  grid-template-columns: minmax(190px, 1.2fr) minmax(170px, 0.95fr) minmax(210px, 1fr) 44px;
+}
+
+.purchase-line-row {
+  grid-template-columns: minmax(190px, 1.15fr) minmax(150px, 0.85fr) minmax(180px, 1fr) minmax(170px, 0.95fr) 44px;
+  grid-template-areas:
+    "article quantity unit-cost tax remove"
+    "discount discount discount discount remove";
+}
+
+.purchase-line-row > .field:nth-of-type(1) {
+  grid-area: article;
+}
+
+.purchase-line-row > .field:nth-of-type(2) {
+  grid-area: quantity;
+}
+
+.purchase-line-row > .field:nth-of-type(3) {
+  grid-area: unit-cost;
+}
+
+.purchase-line-row > .field:nth-of-type(4) {
+  grid-area: tax;
+}
+
+.purchase-line-row > .field:nth-of-type(5) {
+  grid-area: discount;
+}
+
+.purchase-line-row > .icon-button {
+  grid-area: remove;
+  align-self: center;
+}
+
+.production-line-row {
+  grid-template-columns: minmax(220px, 1.2fr) minmax(170px, 0.8fr) minmax(230px, 1fr) 44px;
+  grid-template-areas: "article quantity cost remove";
+}
+
+.production-line-row > .field:nth-of-type(1) {
+  grid-area: article;
+}
+
+.production-line-row > .field:nth-of-type(2) {
+  grid-area: quantity;
+}
+
+.production-line-row > .calculated-field {
+  grid-area: cost;
+}
+
+.production-line-row > .icon-button {
+  grid-area: remove;
 }
 
 .calculated-field {
   display: grid;
   align-content: center;
-  min-height: 42px;
-  padding: 8px 11px;
+  min-height: 44px;
+  min-width: 0;
+  padding: 9px 14px;
   border: 1px dashed var(--line);
   border-radius: 8px;
   background: color-mix(in srgb, var(--primary) 7%, var(--surface));
@@ -794,6 +904,7 @@ tr:last-child td {
 .calculated-field strong {
   margin-top: 3px;
   font-size: 0.95rem;
+  overflow-wrap: anywhere;
 }
 
 .form-actions {
@@ -826,6 +937,27 @@ tr:last-child td {
   .kpi-grid,
   .chart-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .purchase-line-row,
+  .production-line-row,
+  .recipe-line-row {
+    grid-template-columns: 1fr;
+    grid-template-areas: none;
+  }
+
+  .purchase-line-row > .field,
+  .purchase-line-row > .icon-button,
+  .production-line-row > .field,
+  .production-line-row > .calculated-field,
+  .production-line-row > .icon-button {
+    grid-area: auto;
+  }
+
+  .line-row > .icon-button {
+    width: 100%;
   }
 }
 

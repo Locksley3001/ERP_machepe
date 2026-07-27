@@ -48,18 +48,18 @@ export const navigationItems: NavigationItem[] = [
     icon: Truck
   },
   {
-    key: "purchases",
-    href: "/purchases",
-    label: "Compras",
-    description: "Entradas con factura que actualizan inventario e historial.",
-    icon: ShoppingBag
-  },
-  {
     key: "inventory",
     href: "/inventory",
     label: "Inventario",
     description: "Materias primas, empaques, activos, herramientas y equipos.",
     icon: Boxes
+  },
+  {
+    key: "purchases",
+    href: "/purchases",
+    label: "Compras",
+    description: "Entradas con factura que actualizan inventario e historial.",
+    icon: ShoppingBag
   },
   {
     key: "production",
@@ -69,18 +69,18 @@ export const navigationItems: NavigationItem[] = [
     icon: Factory
   },
   {
-    key: "recipes",
-    href: "/recipes",
-    label: "Recetas",
-    description: "Versiones de recetas con ingredientes y empaques.",
-    icon: BookOpen
-  },
-  {
     key: "menu",
     href: "/menu",
     label: "Carta",
     description: "Productos vendibles, categorias, precios y favoritos.",
     icon: Receipt
+  },
+  {
+    key: "recipes",
+    href: "/recipes",
+    label: "Recetas",
+    description: "Versiones de recetas con ingredientes y empaques.",
+    icon: BookOpen
   },
   {
     key: "movements",

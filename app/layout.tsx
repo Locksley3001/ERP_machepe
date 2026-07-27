@@ -22,6 +22,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es" suppressHydrationWarning>
+      <head>
+        <link rel="preload" href="/feedback/confirmation.svg" as="image" />
+        <link rel="preload" href="/feedback/wrong.svg" as="image" />
+      </head>
       <body>
         <AppShell>{children}</AppShell>
         <PwaRegister />
