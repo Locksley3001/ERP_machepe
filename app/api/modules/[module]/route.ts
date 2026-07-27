@@ -356,6 +356,25 @@ export async function POST(request: NextRequest, context: { params: Promise<{ mo
 
     if (module === "purchases") {
       const values = purchaseSchema.parse(payload);
+      const inventoryItemIds = [...new Set(values.lines.map((line) => line.inventoryItemId))];
+      const { data: inventoryRows, error: inventoryError } = await supabase
+        .from("inventory_items")
+        .select("id, name, supplier_id, quantity, average_cost")
+        .in("id", inventoryItemIds);
+      if (inventoryError) throw inventoryError;
+
+      const inventoryMap = new Map((inventoryRows ?? []).map((item) => [item.id as string, item]));
+      for (const line of values.lines) {
+        const item = inventoryMap.get(line.inventoryItemId);
+        if (!item) {
+          throw new Error("Uno de los articulos ya no existe en inventario.");
+        }
+
+        if (item.supplier_id !== values.supplierId) {
+          throw new Error(`${item.name ?? "El articulo"} no pertenece al proveedor seleccionado.`);
+        }
+      }
+
       const subtotal = values.lines.reduce((total, line) => total + line.quantity * line.unitCost, 0);
       const taxTotal = values.lines.reduce((total, line) => total + line.quantity * line.unitCost * line.taxRate, 0);
       const discountTotal = values.lines.reduce((total, line) => total + line.discount, 0);
@@ -389,6 +408,29 @@ export async function POST(request: NextRequest, context: { params: Promise<{ mo
         }))
       );
       if (linesError) throw linesError;
+
+      for (const itemId of inventoryItemIds) {
+        const item = inventoryMap.get(itemId);
+        const itemLines = values.lines.filter((line) => line.inventoryItemId === itemId);
+        const purchasedQuantity = itemLines.reduce((totalQuantity, line) => totalQuantity + line.quantity, 0);
+        const purchasedValue = itemLines.reduce((totalValue, line) => totalValue + line.quantity * line.unitCost, 0);
+        const latestUnitCost = purchasedQuantity > 0 ? purchasedValue / purchasedQuantity : 0;
+        const currentQuantity = Number(item?.quantity ?? 0);
+        const currentAverageCost = Number(item?.average_cost ?? 0);
+        const nextAverageCost =
+          currentQuantity > 0
+            ? (currentQuantity * currentAverageCost + purchasedValue) / (currentQuantity + purchasedQuantity)
+            : latestUnitCost;
+
+        const { error: costUpdateError } = await supabase
+          .from("inventory_items")
+          .update({
+            purchase_cost: latestUnitCost,
+            average_cost: nextAverageCost
+          })
+          .eq("id", itemId);
+        if (costUpdateError) throw costUpdateError;
+      }
 
       const { error: movementError } = await supabase.from("inventory_movements").insert(
         values.lines.map((line) => ({

@@ -630,6 +630,14 @@ tr:last-child td {
   resize: vertical;
 }
 
+.locked-field input:disabled {
+  cursor: not-allowed;
+  border-style: dashed;
+  background: var(--surface-strong);
+  color: var(--muted);
+  opacity: 1;
+}
+
 .totals {
   display: grid;
   gap: 8px;

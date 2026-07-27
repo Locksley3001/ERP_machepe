@@ -294,7 +294,7 @@ function buildPayload(module: ModuleKey, form: FormData, rows: DynamicRow[]) {
 function dialogDescription(module: ModuleKey) {
   const descriptions: Partial<Record<ModuleKey, string>> = {
     suppliers: "Crea un proveedor para reutilizarlo en compras e inventario.",
-    inventory: "Crea un articulo y registra su cantidad inicial como movimiento.",
+    inventory: "Crea el articulo base. El stock y el costo real se actualizan desde compras.",
     menu: "Crea un producto vendible para la carta.",
     recipes: "Crea una version de receta con ingredientes y empaques.",
     purchases: "Registra una compra y aumenta automaticamente el inventario.",
@@ -332,7 +332,6 @@ function InventoryFields({
   categories: string[];
 }) {
   const [unit, setUnit] = useState("");
-  const [averageCost, setAverageCost] = useState("0");
 
   return (
     <div className="form-grid">
@@ -353,18 +352,14 @@ function InventoryFields({
         <span>Unidad base de inventario</span>
         <input name="unit" placeholder="g, ml, und" required value={unit} onChange={(event) => setUnit(event.target.value)} />
       </label>
-      <ReadOnlyMetric label="Cantidad inicial" value={`0 ${unit || "unidades"}`} />
+      <LockedField label="Cantidad inicial en unidad base" value={`0 ${unit || "unidades"}`} />
       <NumberField name="minimumQuantity" label="Cantidad minima permitida" defaultValue="0" />
       <NumberField name="maximumQuantity" label="Cantidad maxima recomendada" defaultValue="0" />
-      <MoneyField
-        name="averageCost"
-        label={`Costo unitario por ${unit || "unidad base"}`}
-        value={averageCost}
-        onChange={setAverageCost}
-      />
+      <LockedField label="Costo total de compra" value="Se calcula al registrar una compra" />
+      <input type="hidden" name="averageCost" value="0" />
       <ReadOnlyMetric
-        label="Costo registrado en inventario"
-        value={parseLocalizedNumber(averageCost) ? `${formatNumber(parseLocalizedNumber(averageCost), 2)} / ${unit || "unidad"}` : "Pendiente"}
+        label={`Costo unitario por ${unit || "unidad base"}`}
+        value="Pendiente de compra"
       />
       <MoneyField name="referencePrice" label="Precio de referencia opcional" defaultValue="0" />
       <Field name="location" label="Ubicacion" />
@@ -879,6 +874,15 @@ function ReadOnlyMetric({ label, value }: { label: string; value: string }) {
       <span>{label}</span>
       <strong>{value}</strong>
     </div>
+  );
+}
+
+function LockedField({ label, value }: { label: string; value: string }) {
+  return (
+    <label className="field locked-field">
+      <span>{label}</span>
+      <input value={value} disabled readOnly />
+    </label>
   );
 }
 
