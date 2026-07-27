@@ -855,7 +855,7 @@ tr:last-child td {
   grid-template-columns: minmax(190px, 1.15fr) minmax(150px, 0.85fr) minmax(180px, 1fr) minmax(160px, 0.8fr) 44px;
   grid-template-areas:
     "article quantity total tax remove"
-    "unit-cost unit-cost discount discount remove";
+    "inventory-cost unit-cost discount discount remove";
 }
 
 .purchase-line-row > .field:nth-of-type(1) {
@@ -879,6 +879,14 @@ tr:last-child td {
 }
 
 .purchase-line-row > .calculated-field {
+  grid-area: unit-cost;
+}
+
+.purchase-line-row > .calculated-field:nth-of-type(1) {
+  grid-area: inventory-cost;
+}
+
+.purchase-line-row > .calculated-field:nth-of-type(2) {
   grid-area: unit-cost;
 }
 

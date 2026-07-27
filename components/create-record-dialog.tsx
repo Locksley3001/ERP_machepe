@@ -190,6 +190,8 @@ function buildPayload(module: ModuleKey, form: FormData, rows: DynamicRow[]) {
   }
 
   if (module === "inventory") {
+    const averageCost = value("averageCost");
+
     return {
       code: value("code"),
       name: value("name"),
@@ -197,11 +199,11 @@ function buildPayload(module: ModuleKey, form: FormData, rows: DynamicRow[]) {
       kind: value("kind"),
       description: value("description"),
       unit: value("unit"),
-      quantity: value("quantity"),
+      quantity: "0",
       minimumQuantity: value("minimumQuantity"),
       maximumQuantity: value("maximumQuantity"),
-      purchaseCost: value("purchaseCost"),
-      averageCost: value("averageCost"),
+      purchaseCost: averageCost,
+      averageCost,
       referencePrice: value("referencePrice"),
       location: value("location"),
       barcode: value("barcode"),
@@ -329,10 +331,8 @@ function InventoryFields({
   suppliers: AppData["suppliers"];
   categories: string[];
 }) {
-  const [quantity, setQuantity] = useState("0");
-  const [purchaseCost, setPurchaseCost] = useState("0");
   const [unit, setUnit] = useState("");
-  const unitCost = parseLocalizedNumber(quantity) > 0 ? parseLocalizedNumber(purchaseCost) / parseLocalizedNumber(quantity) : 0;
+  const [averageCost, setAverageCost] = useState("0");
 
   return (
     <div className="form-grid">
@@ -353,14 +353,18 @@ function InventoryFields({
         <span>Unidad base de inventario</span>
         <input name="unit" placeholder="g, ml, und" required value={unit} onChange={(event) => setUnit(event.target.value)} />
       </label>
-      <NumberField name="quantity" label="Cantidad inicial en unidad base" value={quantity} onChange={setQuantity} />
+      <ReadOnlyMetric label="Cantidad inicial" value={`0 ${unit || "unidades"}`} />
       <NumberField name="minimumQuantity" label="Cantidad minima permitida" defaultValue="0" />
       <NumberField name="maximumQuantity" label="Cantidad maxima recomendada" defaultValue="0" />
-      <MoneyField name="purchaseCost" label="Costo total de compra" value={purchaseCost} onChange={setPurchaseCost} />
-      <input type="hidden" name="averageCost" value={unitCost} />
+      <MoneyField
+        name="averageCost"
+        label={`Costo unitario por ${unit || "unidad base"}`}
+        value={averageCost}
+        onChange={setAverageCost}
+      />
       <ReadOnlyMetric
-        label="Costo automatico por unidad base"
-        value={unitCost ? `${formatNumber(unitCost, 2)} por ${unit || "unidad"}` : "Pendiente"}
+        label="Costo registrado en inventario"
+        value={parseLocalizedNumber(averageCost) ? `${formatNumber(parseLocalizedNumber(averageCost), 2)} / ${unit || "unidad"}` : "Pendiente"}
       />
       <MoneyField name="referencePrice" label="Precio de referencia opcional" defaultValue="0" />
       <Field name="location" label="Ubicacion" />
@@ -456,25 +460,31 @@ function PurchaseFields({
   addRow: () => void;
   removeRow: (id: string) => void;
 }) {
+  const [selectedSupplierId, setSelectedSupplierId] = useState("");
+  const supplierItems = selectedSupplierId ? items.filter((item) => item.supplierId === selectedSupplierId) : [];
+
   return (
     <>
       <div className="form-grid">
         <label className="field">
           <span>Proveedor</span>
-          <select name="supplierId" required defaultValue="">
+          <select name="supplierId" required value={selectedSupplierId} onChange={(event) => setSelectedSupplierId(event.target.value)}>
             <option value="">Seleccionar</option>
             {suppliers.map((supplier) => (
               <option key={supplier.id} value={supplier.id}>
                 {supplier.name}
               </option>
-            ))}
-          </select>
-        </label>
+          ))}
+        </select>
+      </label>
         <Field name="invoiceNumber" label="Numero de factura" required />
         <Field name="purchasedAt" label="Fecha" type="datetime-local" />
       </div>
+      {selectedSupplierId && !supplierItems.length ? (
+        <p className="form-message">Este proveedor no tiene articulos asociados en inventario.</p>
+      ) : null}
       <LineEditor title="Productos comprados" rows={rows} addRow={addRow} removeRow={removeRow} rowClassName="purchase-line-row">
-        {(row) => <PurchaseLine row={row} items={items} />}
+        {(row) => <PurchaseLine row={row} items={supplierItems} disabled={!selectedSupplierId || !supplierItems.length} />}
       </LineEditor>
     </>
   );
@@ -629,19 +639,34 @@ function InventoryLine({
   );
 }
 
-function PurchaseLine({ row, items }: { row: DynamicRow; items: AppData["inventoryItems"] }) {
+function PurchaseLine({
+  row,
+  items,
+  disabled = false
+}: {
+  row: DynamicRow;
+  items: AppData["inventoryItems"];
+  disabled?: boolean;
+}) {
   const [selectedId, setSelectedId] = useState("");
   const [quantity, setQuantity] = useState("");
   const [lineTotal, setLineTotal] = useState("0");
   const selectedItem = items.find((item) => item.id === selectedId);
+  const selectedValue = selectedItem ? selectedId : "";
   const unitCost = parseLocalizedNumber(quantity) > 0 ? parseLocalizedNumber(lineTotal) / parseLocalizedNumber(quantity) : 0;
 
   return (
     <>
       <label className="field">
         <span>Articulo</span>
-        <select name={`inventoryItemId-${row.id}`} required value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
-          <option value="">Seleccionar</option>
+        <select
+          name={`inventoryItemId-${row.id}`}
+          required
+          value={selectedValue}
+          disabled={disabled}
+          onChange={(event) => setSelectedId(event.target.value)}
+        >
+          <option value="">{disabled ? "Selecciona proveedor" : "Seleccionar"}</option>
           {items.map((item) => (
             <option key={item.id} value={item.id}>
               {item.name} ({item.unit})
@@ -659,7 +684,11 @@ function PurchaseLine({ row, items }: { row: DynamicRow; items: AppData["invento
       <MoneyField name={`lineTotal-${row.id}`} label="Costo total comprado" value={lineTotal} onChange={setLineTotal} />
       <input type="hidden" name={`unitCost-${row.id}`} value={unitCost} />
       <ReadOnlyMetric
-        label="Costo unitario automatico"
+        label="Costo unitario en inventario"
+        value={selectedItem ? `${formatNumber(selectedItem.averageCost, 2)} / ${selectedItem.unit}` : "Selecciona articulo"}
+      />
+      <ReadOnlyMetric
+        label="Nuevo costo unitario"
         value={unitCost && selectedItem ? `${formatNumber(unitCost, 2)} / ${selectedItem.unit}` : "Ingresa cantidad y total"}
       />
       <NumberField name={`taxRate-${row.id}`} label="IVA en decimal (0,19)" defaultValue="0" />

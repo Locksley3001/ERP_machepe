@@ -255,7 +255,6 @@ export async function POST(request: NextRequest, context: { params: Promise<{ mo
     if (module === "inventory") {
       const values = inventorySchema.parse(payload);
       const categoryId = await getOrCreateCategory(supabase, values.category, "inventory");
-      const initialQuantity = values.quantity;
       const averageCost = values.averageCost || values.purchaseCost;
 
       const { data, error } = await supabase
@@ -284,20 +283,6 @@ export async function POST(request: NextRequest, context: { params: Promise<{ mo
         .single();
 
       if (error) throw error;
-
-      if (initialQuantity > 0) {
-        const { error: movementError } = await supabase.from("inventory_movements").insert({
-          inventory_item_id: data.id,
-          type: "manual_adjustment",
-          quantity: initialQuantity,
-          unit_cost: averageCost,
-          reference_table: "inventory_items",
-          reference_id: data.id,
-          notes: "Cantidad inicial",
-          responsible_id: user.id
-        });
-        if (movementError) throw movementError;
-      }
 
       await writeAudit(supabase, user.id, "inventory_items", data.id, { code: values.code, name: values.name });
       return NextResponse.json({ id: data.id });
