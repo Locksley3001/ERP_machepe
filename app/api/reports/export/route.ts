@@ -3,8 +3,19 @@ import { NextRequest } from "next/server";
 import { formatCurrency, saleCostTotal, saleGrossTotal, type PeriodPreset } from "@/lib/domain";
 import { buildReportSummary, periodDays, resolvePeriod, salesInPeriod } from "@/lib/reports";
 import { getAppData } from "@/lib/app-data";
+import { getAccessContext } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
+  const access = await getAccessContext();
+
+  if (!access.authenticated) {
+    return new Response("Debes iniciar sesion.", { status: 401 });
+  }
+
+  if (!access.allowedModules.includes("reports")) {
+    return new Response("No tienes permiso para exportar reportes.", { status: 403 });
+  }
+
   const data = await getAppData();
   const { inventoryItems, movements, productionBatches, purchases, sales } = data;
   const preset = (request.nextUrl.searchParams.get("preset") ?? "week") as PeriodPreset;

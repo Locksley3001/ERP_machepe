@@ -2,8 +2,10 @@ import { Activity, Banknote, Boxes, TrendingUp } from "lucide-react";
 import { DashboardCharts } from "@/components/charts/dashboard-charts";
 import { formatCurrency, saleCostTotal, saleGrossTotal, sumBy } from "@/lib/domain";
 import { getAppData } from "@/lib/app-data";
+import { requireModuleAccess } from "@/lib/permissions";
 
 export default async function DashboardPage() {
+  await requireModuleAccess("dashboard");
   const { inventoryItems, purchases, sales } = await getAppData();
   const revenue = sumBy(sales, saleGrossTotal);
   const cost = sumBy(sales, saleCostTotal);

@@ -2,14 +2,16 @@ import { AlertTriangle } from "lucide-react";
 import { notFound } from "next/navigation";
 import { CreateRecordDialog } from "@/components/create-record-dialog";
 import { DataTable } from "@/components/data-table";
+import { PermissionsManager } from "@/components/permissions-manager";
 import { PosTerminal } from "@/components/pos-terminal";
 import { ReportExporter } from "@/components/report-exporter";
 import { formatCurrency, recipeCost, saleGrossTotal, type ModuleKey } from "@/lib/domain";
-import { findNavigationItem } from "@/lib/navigation";
+import { findNavigationItem, navigationItems } from "@/lib/navigation";
+import { getPermissionAdminData } from "@/lib/permissions-admin";
 import { periodDays, reconstructDay, resolvePeriod } from "@/lib/reports";
 import type { AppData } from "@/lib/app-data";
 
-export function ModuleWorkspace({ module, data }: { module: string; data: AppData }) {
+export async function ModuleWorkspace({ module, data }: { module: string; data: AppData }) {
   const item = findNavigationItem(module);
   const { inventoryItems, menuProducts, movements, productionBatches, purchases, recipes, suppliers } = data;
 
@@ -273,20 +275,24 @@ export function ModuleWorkspace({ module, data }: { module: string; data: AppDat
     );
   }
 
+  const permissionData = await getPermissionAdminData();
+  const permissionModules = navigationItems.map((navigationItem) => ({
+    key: navigationItem.key,
+    label: navigationItem.label,
+    description: navigationItem.description
+  }));
+
   return (
     <>
       <ModuleHeader title={item.label} description={item.description} module={item.key} action="Nuevo usuario" data={data} />
       <section className="panel">
         <h2>Control de acceso y auditoria</h2>
-        <p>Roles disponibles: Administrador y Empleado. Cada operacion critica debe quedar en audit_log.</p>
-        <div className="permission-grid">
-          {["Inventario", "Compras", "Produccion", "POS", "Reportes", "Usuarios"].map((permission) => (
-            <label key={permission} className="check-row">
-              <input type="checkbox" defaultChecked={permission !== "Usuarios"} />
-              <span>{permission}</span>
-            </label>
-          ))}
-        </div>
+        <p>Administra los modulos visibles y permitidos para cada perfil de empleado.</p>
+        {permissionData.authorized ? (
+          <PermissionsManager profiles={permissionData.profiles} permissions={permissionData.permissions} modules={permissionModules} />
+        ) : (
+          <p className="form-message">Solo un administrador activo puede editar permisos.</p>
+        )}
       </section>
     </>
   );

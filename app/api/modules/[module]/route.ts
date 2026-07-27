@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { parseLocalizedNumber } from "@/lib/number-format";
+import type { ModuleKey } from "@/lib/domain";
+import { getAccessContext, isModuleKey } from "@/lib/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -138,6 +140,14 @@ function cleanText(value: string) {
   return value.trim() || null;
 }
 
+function permissionModuleForApi(module: string): ModuleKey | null {
+  if (module === "sales") {
+    return "pos";
+  }
+
+  return isModuleKey(module) ? module : null;
+}
+
 function inventoryStatus(currentQuantity: number, minimumQuantity: number) {
   if (currentQuantity <= 0) {
     return "out_of_stock";
@@ -227,6 +237,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ mo
   const payload = await request.json();
 
   try {
+    const permissionModule = permissionModuleForApi(module);
+    const access = await getAccessContext();
+    if (!permissionModule || !access.allowedModules.includes(permissionModule)) {
+      return NextResponse.json({ error: "No tienes permiso para realizar esta operacion." }, { status: 403 });
+    }
+
     if (module === "suppliers") {
       const values = supplierSchema.parse(payload);
       const { data, error } = await supabase

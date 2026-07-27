@@ -662,6 +662,85 @@ tr:last-child td {
   min-height: 42px;
 }
 
+.permission-manager {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.permission-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.permission-user-select {
+  margin: 0;
+}
+
+.permission-summary {
+  display: grid;
+  min-width: 150px;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+}
+
+.permission-summary span,
+.permission-module-row small,
+.permission-note {
+  color: var(--muted);
+}
+
+.permission-summary strong {
+  color: var(--text);
+}
+
+.permission-note {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+}
+
+.permission-module-list {
+  display: grid;
+  gap: 10px;
+}
+
+.permission-module-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.permission-module-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.permission-module-copy strong,
+.permission-module-copy small {
+  overflow-wrap: anywhere;
+}
+
+.permission-module-row input {
+  width: 38px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
 .cart-panel > .field + .primary-action,
 .cart-panel > .form-message + .primary-action {
   margin-top: 14px;
@@ -1016,7 +1095,8 @@ tr:last-child td {
   .kpi-grid,
   .chart-grid,
   .payment-grid,
-  .permission-grid {
+  .permission-grid,
+  .permission-toolbar {
     grid-template-columns: 1fr;
   }
 
