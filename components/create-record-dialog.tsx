@@ -763,9 +763,7 @@ function NumberField({
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     hasManualValue.current = true;
-    const formatted = formatMoneyTyping(event.target.value);
-    event.target.value = formatted;
-    onChange?.(formatted);
+    onChange?.(event.target.value);
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
@@ -818,7 +816,9 @@ function MoneyField({
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     hasManualValue.current = true;
-    onChange?.(event.target.value);
+    const formatted = formatMoneyTyping(event.target.value);
+    event.target.value = formatted;
+    onChange?.(formatted);
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
@@ -835,7 +835,7 @@ function MoneyField({
         inputMode="numeric"
         required={required}
         value={value}
-        defaultValue={value === undefined ? defaultValue : undefined}
+        defaultValue={value === undefined && defaultValue !== undefined ? formatMoneyTyping(defaultValue) : undefined}
         onFocus={handleFocus}
         onChange={handleChange}
         onBlur={handleBlur}
