@@ -1046,9 +1046,15 @@ tr:last-child td {
     grid-template-columns: 1fr;
   }
 
+  .app-shell {
+    align-content: start;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
   .sidebar {
     position: sticky;
     z-index: 30;
+    align-self: start;
     height: auto;
     padding: 0;
     overflow: visible;
