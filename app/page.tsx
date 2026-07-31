@@ -1,14 +1,10 @@
-import { Activity, Banknote, Boxes, TrendingUp } from "lucide-react";
 import { DashboardCharts } from "@/components/charts/dashboard-charts";
-import { formatCurrency, saleCostTotal, saleGrossTotal, sumBy } from "@/lib/domain";
 import { getAppData } from "@/lib/app-data";
 import { requireModuleAccess } from "@/lib/permissions";
 
 export default async function DashboardPage() {
   await requireModuleAccess("dashboard");
   const { inventoryItems, purchases, sales } = await getAppData();
-  const revenue = sumBy(sales, saleGrossTotal);
-  const cost = sumBy(sales, saleCostTotal);
   const lowStock = inventoryItems.filter((item) => item.quantity <= item.minimumQuantity).length;
 
   return (
@@ -20,26 +16,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="kpi-grid">
-        <Kpi icon={<Banknote size={20} />} label="Ventas" value={formatCurrency(revenue)} />
-        <Kpi icon={<TrendingUp size={20} />} label="Utilidad bruta" value={formatCurrency(revenue - cost)} />
-        <Kpi icon={<Boxes size={20} />} label="Alertas stock" value={String(lowStock)} />
-        <Kpi icon={<Activity size={20} />} label="Compras recientes" value={String(purchases.length)} />
-      </div>
-
-      <DashboardCharts sales={sales} />
+      <DashboardCharts sales={sales} purchases={purchases} lowStock={lowStock} now={new Date().toISOString()} />
     </>
-  );
-}
-
-function Kpi({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <section className="kpi">
-      <span>
-        {icon}
-        {label}
-      </span>
-      <strong>{value}</strong>
-    </section>
   );
 }
