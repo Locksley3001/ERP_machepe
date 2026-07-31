@@ -1,41 +1,15 @@
-import Link from "next/link";
-import { Coffee, Search } from "lucide-react";
-import { navigationItems } from "@/lib/navigation";
+import { Search } from "lucide-react";
 import { firstAllowedPath, getAccessContext } from "@/lib/permissions";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AppNavigation } from "@/components/app-navigation";
 
 export async function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
   const access = await getAccessContext();
-  const visibleItems = access.allowedModules.length
-    ? navigationItems.filter((item) => access.allowedModules.includes(item.key))
-    : [];
   const homeHref = access.allowedModules.length ? firstAllowedPath(access.allowedModules) : "/login";
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
-        <Link className="brand" href={homeHref} aria-label="Ir al modulo principal">
-          <span className="brand-mark">
-            <Coffee size={22} />
-          </span>
-          <span>
-            <strong>ERP MACHEPE</strong>
-            <small>MACHEPE</small>
-          </span>
-        </Link>
-
-        <nav className="nav-list" aria-label="Modulos principales">
-          {visibleItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link key={item.key} href={item.href} className="nav-item">
-                <Icon size={18} />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
+      <AppNavigation allowedModules={access.allowedModules} homeHref={homeHref} />
 
       <div className="main-column">
         <header className="topbar">

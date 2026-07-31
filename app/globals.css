@@ -78,6 +78,13 @@ a {
   overflow-y: auto;
 }
 
+.mobile-sidebar-bar,
+.mobile-menu-button,
+.mobile-menu-close,
+.mobile-nav-backdrop {
+  display: none;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -1040,31 +1047,106 @@ tr:last-child td {
   }
 
   .sidebar {
-    position: static;
+    position: sticky;
+    z-index: 30;
     height: auto;
-    overflow: hidden;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .mobile-sidebar-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 72px;
+    padding: 14px 16px;
+    background: #111827;
+  }
+
+  .mobile-menu-button,
+  .mobile-menu-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 46px;
+    height: 46px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #f8fafc;
+  }
+
+  .mobile-menu-button:hover,
+  .mobile-menu-close:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .mobile-brand .brand {
+    margin-bottom: 0;
+  }
+
+  .sidebar-drawer {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 40;
+    width: min(84vw, 330px);
+    padding: 22px 16px;
+    overflow-y: auto;
+    background: #111827;
+    box-shadow: 18px 0 48px rgba(15, 23, 42, 0.28);
+    transform: translateX(-100%);
+    transition: transform 180ms ease;
+  }
+
+  .sidebar.is-open .sidebar-drawer {
+    transform: translateX(0);
+  }
+
+  .sidebar-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .sidebar-drawer-head .brand {
+    min-width: 0;
+    margin-bottom: 0;
+  }
+
+  .mobile-nav-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 35;
+    border: 0;
+    padding: 0;
+    background: rgba(15, 23, 42, 0.46);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+  }
+
+  .sidebar.is-open .mobile-nav-backdrop {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .nav-list {
-    display: flex;
-    gap: 10px;
-    margin-inline: -16px;
-    overflow-x: auto;
-    padding: 2px 16px 8px;
-    scroll-padding-inline: 16px;
-    scroll-snap-type: x proximity;
-    scrollbar-width: thin;
-    -webkit-overflow-scrolling: touch;
+    display: grid;
+    gap: 6px;
   }
 
   .nav-item {
-    flex: 0 0 auto;
-    justify-content: center;
-    min-width: 142px;
-    min-height: 48px;
+    min-height: 50px;
     padding: 12px 14px;
-    scroll-snap-align: start;
-    white-space: nowrap;
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+
+  .topbar {
+    top: 72px;
   }
 
   .cart-panel {
