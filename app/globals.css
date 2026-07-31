@@ -1042,10 +1042,29 @@ tr:last-child td {
   .sidebar {
     position: static;
     height: auto;
+    overflow: hidden;
   }
 
   .nav-list {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    display: flex;
+    gap: 10px;
+    margin-inline: -16px;
+    overflow-x: auto;
+    padding: 2px 16px 8px;
+    scroll-padding-inline: 16px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-item {
+    flex: 0 0 auto;
+    justify-content: center;
+    min-width: 142px;
+    min-height: 48px;
+    padding: 12px 14px;
+    scroll-snap-align: start;
+    white-space: nowrap;
   }
 
   .cart-panel {
